@@ -1,9 +1,6 @@
 # Charts, Dashboards & UI Widgets
 
 Interactive components built with HTML, CSS and JavaScript: data visualizations, dashboards, tables, calendars and form widgets. Each one is a standalone page with no build step.
-
-<a href="https://sntggrz.github.io/Charts-Dashboards-UI-Widgets/"><img src="docs/screenshots/gallery.jpg" alt="Live gallery"></a>
-
 ### 👉 [Open the live gallery](https://sntggrz.github.io/Charts-Dashboards-UI-Widgets/)
 
 Every component runs side by side in the browser, so you can hover, filter and click around without cloning anything. It has light and dark mode. Click any screenshot below to open that component live.
