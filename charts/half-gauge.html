@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es" style="height: 100%">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dynamic Solid Gauge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --fg-1: #0b0b0f;
+        --fg-2: #6b7280;
+        --track: #e9eaec;
+        --bg: #ffffff;
+        --apple-red: #ff3b30;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+          'SF Pro Text', Inter, Roboto, Segoe UI, Helvetica, Arial, sans-serif;
+        color: var(--fg-1);
+        -webkit-font-smoothing: antialiased;
+      }
+      #container {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+    <script>
+      let maxValue = 25000000.9;
+      let currentValue = 25000000;
+      const chartTitle = 'Contratos acumulados';
+
+      if (!maxValue || maxValue <= 0) maxValue = 1;
+      const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+      const moneyFmt = (n) => {
+        try {
+          return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(n);
+        } catch {
+          return (
+            '$' +
+            (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
+            '.00'
+          );
+        }
+      };
+
+      const dom = document.getElementById('container');
+      const myChart = echarts.init(dom, null, {
+        renderer: 'canvas',
+        useDirtyRect: false,
+      });
+
+      function makeSeries(val, max) {
+        const over = val > max;
+        const percent = Math.round((val / max) * 100);
+
+        return {
+          name: 'Gauge',
+          type: 'gauge',
+          startAngle: 180,
+          endAngle: 0,
+          min: 0,
+          max: max,
+          radius: '85%',
+          center: ['50%', '60%'],
+
+          axisLine: {
+            lineStyle: {
+              width: 18,
+              color: [
+                [
+                  1,
+                  getComputedStyle(document.documentElement)
+                    .getPropertyValue('--track')
+                    .trim() || '#e9eaec',
+                ],
+              ],
+              cap: 'round',
+            },
+          },
+          progress: {
+            show: true,
+            width: 18,
+            roundCap: true,
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#55b7ff' },
+                { offset: 1, color: '#007aff' },
+              ]),
+              shadowBlur: 12,
+              shadowColor: 'rgba(0,122,255,0.35)',
+              shadowOffsetY: 2,
+            },
+          },
+
+          pointer: { show: false },
+          axisTick: { show: false },
+          splitLine: { show: false },
+
+          axisLabel: {
+            show: true,
+            distance: 12,
+            color: '#6b7280',
+            fontSize: 11,
+            fontWeight: 500,
+            formatter: (v) =>
+              v === 0 ? moneyFmt(0) : v === max ? moneyFmt(max) : '',
+          },
+
+          detail: {
+            show: true,
+            offsetCenter: [0, '45%'],
+            valueAnimation: true,
+            formatter: () =>
+              `{v|${moneyFmt(val)}}\n{s|${percent}% del objetivo}`,
+            rich: {
+              v: {
+                fontSize: 28,
+                fontWeight: 700,
+                color: over ? '#ff3b30' : '#3a3a3c',
+                lineHeight: 25,
+              },
+              s: {
+                fontSize: 12,
+                color: over ? '#ff3b30' : '#6b7280',
+                fontWeight: 500,
+                padding: [6, 0, 0, 0],
+              },
+            },
+          },
+
+          title: { show: false },
+          data: [{ value: val }],
+          emphasis: { disabled: true },
+        };
+      }
+
+      const option = {
+        backgroundColor: 'transparent',
+        title: [
+          {
+            text: chartTitle,
+            left: 'center',
+            top: '2%',
+            textStyle: {
+              fontSize: 18,
+              fontWeight: 600,
+              color: '#0b0b0f',
+              letterSpacing: 0.2,
+            },
+          },
+        ],
+        tooltip: { show: false },
+        series: [makeSeries(currentValue, maxValue)],
+      };
+
+      myChart.setOption(option);
+      window.addEventListener('resize', myChart.resize);
+
+      function updateGauge(newValue, newMax, newTitle) {
+        if (typeof newMax === 'number' && newMax > 0) maxValue = newMax;
+        if (typeof newTitle === 'string' && newTitle.trim()) {
+          myChart.setOption({ title: [{ text: newTitle }] });
+        }
+        currentValue = clamp(Number(newValue) || 0, 0, Number.MAX_SAFE_INTEGER);
+        myChart.setOption({ series: [makeSeries(currentValue, maxValue)] });
+      }
+      window.updateGauge = updateGauge;
+    </script>
+  </body>
+</html>

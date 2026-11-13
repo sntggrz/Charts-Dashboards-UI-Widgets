@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tickets Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #fff;
+        --card: #fff;
+        --text: #111827;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --blue: #2563eb;
+        --green: #16a34a;
+        --amber: #d97706;
+        --red: #dc2626;
+        --purple: #7c3aed;
+        --shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+        --radius: 14px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+      .app {
+        max-width: 1010px;
+        margin: auto;
+        padding: 8px 10px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 14px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 44px);
+        letter-spacing: -0.045em;
+      }
+      .eyebrow {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 12px;
+      }
+      .subtitle {
+        color: var(--muted);
+        max-width: 760px;
+        line-height: 1.55;
+      }
+      .filters {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      select,
+      input {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+        background: #fff;
+        font-weight: 700;
+        color: #374151;
+      }
+      .grid {
+        display: grid;
+        gap: 8px;
+      }
+      .kpis {
+        grid-template-columns: repeat(6, 1fr);
+        margin-bottom: 18px;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius);
+        padding: 10px;
+      }
+
+      .kpis,
+      .charts-3,
+      .charts-2,
+      .charts-1 {
+        margin-bottom: 8px;
+      }
+
+      .kpi {
+        min-height: 92px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .kpi-label {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .kpi-value {
+        font-size: 28px;
+        font-weight: 950;
+        letter-spacing: -0.05em;
+        margin-top: 12px;
+      }
+      .kpi-note {
+        color: var(--muted);
+        font-size: 8px;
+        margin-top: 8px;
+      }
+      .charts-3 {
+        grid-template-columns: repeat(6, 1fr);
+        margin-bottom: 18px;
+      }
+      .charts-3 > .card {
+        grid-column: span 2;
+      }
+      .charts-2 {
+        grid-template-columns: 1fr 1fr;
+        margin-bottom: 18px;
+      }
+      .section-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .section-title h2 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: -0.02em;
+      }
+      .section-title span {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .chart-box {
+        height: 300px;
+        position: relative;
+      }
+      .chart-box.small {
+        height: 245px;
+      }
+      .badge {
+        display: inline-flex;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+      .green {
+        background: #dcfce7;
+        color: var(--green);
+      }
+      .amber {
+        background: #fef3c7;
+        color: var(--amber);
+      }
+      .red {
+        background: #fee2e2;
+        color: var(--red);
+      }
+      .blue {
+        background: #dbeafe;
+        color: var(--blue);
+      }
+      .purple {
+        background: #ede9fe;
+        color: var(--purple);
+      }
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .flow-card {
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+        text-align: center;
+      }
+      .flow-card strong {
+        display: block;
+        font-size: 20px;
+        letter-spacing: -0.05em;
+      }
+      .flow-card span {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .leaderboard {
+        display: grid;
+        gap: 8px;
+      }
+
+      .leaderboard-item {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 10px 12px;
+      }
+
+      .rank {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: #dbeafe;
+        color: var(--blue);
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        font-weight: 950;
+      }
+
+      .leaderboard-name {
+        min-width: 0;
+      }
+
+      .leaderboard-name b {
+        display: block;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .leaderboard-name small {
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .leaderboard-count {
+        font-size: 14px;
+        font-weight: 950;
+        letter-spacing: -0.04em;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+      }
+      th {
+        text-align: left;
+        color: var(--muted);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0 8px 10px;
+      }
+      td {
+        padding: 10px 4px;
+        border-top: 1px solid var(--line);
+        vertical-align: top;
+      }
+      .table-wrap {
+        overflow: auto;
+      }
+      .charts-1 {
+        grid-template-columns: 1fr;
+        margin-bottom: 12px;
+      }
+      @media (max-width: 1005px) {
+        .charts-2 {
+          grid-template-columns: 1fr;
+        }
+
+        .leaderboard {
+          gap: 8px;
+        }
+
+        .leaderboard-item {
+          grid-template-columns: 30px 1fr auto;
+          gap: 10px;
+          padding: 10px;
+        }
+
+        .leaderboard-name b {
+          font-size: 12px;
+        }
+
+        .leaderboard-name small {
+          font-size: 10px;
+        }
+
+        .leaderboard-count {
+          font-size: 16px;
+        }
+
+        .rank {
+          width: 24px;
+          height: 24px;
+          font-size: 11px;
+        }
+
+        .chart-box.small {
+          height: 220px;
+        }
+      }
+      @media (max-width: 900px) {
+        .kpis {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .charts-3 {
+          grid-template-columns: 1fr;
+        }
+        .flow {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        header {
+          flex-direction: column;
+        }
+      }
+      @media (max-width: 720px) {
+        .app {
+          padding: 16px;
+        }
+        .kpis,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+        table {
+          min-width: 900px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <div class="filters">
+          <select id="statusFilter">
+            <option value="">Todos los estatus</option>
+          </select>
+          <select id="typeFilter">
+            <option value="">Todos los tipos</option>
+          </select>
+          <select id="systemFilter">
+            <option value="">Todos los sistemas</option>
+          </select>
+        </div>
+      </header>
+
+      <section class="grid kpis" id="kpis"></section>
+
+      <section class="grid charts-3">
+        <div class="card">
+          <div class="section-title">
+            <h2>Tickets por fecha</h2>
+            <span>volumen diario</span>
+          </div>
+          <div class="chart-box"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="section-title">
+            <h2>Estatus</h2>
+            <span>proceso actual</span>
+          </div>
+          <div class="chart-box"><canvas id="statusChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="section-title">
+            <h2>Tipo de tarea</h2>
+            <span>bug / mejora / duda</span>
+          </div>
+          <div class="chart-box"><canvas id="typeChart"></canvas></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Fictional demo data — no real customers, users or systems.
+      const tickets = [
+        { id: '101', department: 'PROGRAMACIÓN', programCategory: 'Mejora script', status: 'TERMINADO', created: '2026-03-02', delivery: '2026-03-09', clientId: '1', module: 'Compras', user: 'Ana López', platform: 'Mac', recordId: '5001', reviewDate: '2026-03-10', reviewer: 'Carlos Vega', system: 'DEMO_ERP', taskType: 'ERROR', internalType: 'ERROR', description: 'Al guardar una orden de compra el total no se actualiza.', solution: 'Se recalcula el total al cambiar cualquier partida.' },
+        { id: '102', department: 'PROGRAMACIÓN', programCategory: 'Función nueva', status: 'TERMINADO', created: '2026-03-02', delivery: '2026-03-12', clientId: '2', module: 'Inventario', user: 'Diego Ruiz', platform: 'Windows', recordId: '', reviewDate: '2026-03-13', reviewer: 'Carlos Vega', system: 'DEMO_APP', taskType: 'MEJORA', internalType: 'MEJORA', description: 'Agregar filtro por almacén en el reporte de existencias.', solution: 'Nuevo filtro disponible en la barra superior.' },
+        { id: '103', department: 'PROGRAMACIÓN', programCategory: 'Bug', status: 'TERMINADO', created: '2026-03-03', delivery: '2026-03-06', clientId: '1', module: 'Maquinaria', user: 'Lucía Romero', platform: 'Web', recordId: '5040', reviewDate: '2026-03-07', reviewer: 'Sofía Méndez', system: 'DEMO_ERP', taskType: 'ERROR', internalType: 'ERROR', description: 'El estatus del equipo no cambia al asignarlo a obra.', solution: 'Se corrigió el cambio de estatus al asignar.' },
+        { id: '104', department: 'PROGRAMACIÓN', programCategory: 'Sin categoría', status: 'PROCESO', created: '2026-03-03', delivery: '2026-03-27', clientId: '3', module: 'Seguimiento', user: 'Mario Sanz', platform: 'Mac', recordId: '', reviewDate: null, reviewer: '', system: 'DEMO_APP', taskType: 'MEJORA', internalType: 'MEJORA', description: 'Mostrar el avance de cada actividad con una barra de progreso.', solution: '' },
+        { id: '105', department: 'CAPACITACIÓN', programCategory: 'Sin categoría', status: 'DUDA', created: '2026-03-03', delivery: null, clientId: '2', module: 'Folios', user: 'Ana López', platform: 'Web', recordId: '', reviewDate: null, reviewer: '', system: 'DEMO_APP', taskType: 'DUDA', internalType: 'DUDA', description: '¿Cómo se reinicia la numeración de folios al cambiar de año?', solution: '' },
+        { id: '106', department: 'PROGRAMACIÓN', programCategory: 'Bug', status: 'TERMINADO', created: '2026-03-04', delivery: '2026-03-14', clientId: '3', module: 'Mantenimiento', user: 'Diego Ruiz', platform: 'Windows', recordId: '5102', reviewDate: '2026-03-16', reviewer: 'Sofía Méndez', system: 'DEMO_ERP', taskType: 'ERROR', internalType: 'ERROR', description: 'El campo de comentarios se recorta en pantallas grandes.', solution: 'El campo ahora se ajusta al ancho de la ventana.' },
+        { id: '107', department: 'PROGRAMACIÓN', programCategory: 'Sin categoría', status: 'NUEVO', created: '2026-03-05', delivery: null, clientId: '1', module: 'Egresos', user: 'Lucía Romero', platform: 'Web', recordId: '', reviewDate: null, reviewer: '', system: 'DEMO_DEV', taskType: 'MEJORA', internalType: 'MEJORA', description: 'Agregar un segundo nivel de autorización para pagos mayores.', solution: '' },
+        { id: '108', department: 'PROGRAMACIÓN', programCategory: 'Sin categoría', status: 'CANCELADO', created: '2026-03-05', delivery: null, clientId: '2', module: 'Compras', user: 'Mario Sanz', platform: 'Mac', recordId: '', reviewDate: null, reviewer: 'Carlos Vega', system: 'DEMO_APP', taskType: 'MEJORA', internalType: 'MEJORA', description: 'Ocultar la columna de proveedor en la vista de compras.', solution: 'Se descartó: puede confundir al usuario.' },
+        { id: '109', department: 'PROGRAMACIÓN', programCategory: 'Bug', status: 'DUDA', created: '2026-03-05', delivery: null, clientId: '3', module: 'Maquinaria', user: 'Ana López', platform: 'Web', recordId: '', reviewDate: null, reviewer: '', system: 'DEMO_ERP', taskType: 'ERROR', internalType: 'ERROR', description: 'No aparece el equipo recién dado de alta en el catálogo.', solution: '' },
+        { id: '110', department: 'PROGRAMACIÓN', programCategory: 'Función nueva', status: 'PROCESO', created: '2026-03-06', delivery: '2026-04-06', clientId: '1', module: 'Seguimiento', user: 'Diego Ruiz', platform: 'Mac', recordId: '', reviewDate: null, reviewer: '', system: 'DEMO_APP', taskType: 'MEJORA', internalType: 'MEJORA', description: 'Exportar el seguimiento semanal a PDF.', solution: '' },
+      ];
+
+      let charts = [];
+
+      function destroyCharts() {
+        charts.forEach((c) => c.destroy());
+        charts = [];
+      }
+      function countBy(items, key) {
+        return items.reduce((acc, item) => {
+          const value = item[key] || 'Sin dato';
+          acc[value] = (acc[value] || 0) + 1;
+          return acc;
+        }, {});
+      }
+      function topEntries(obj, n = 8) {
+        return Object.entries(obj)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, n);
+      }
+      function badgeClass(value) {
+        const v = String(value).toLowerCase();
+        if (v.includes('terminado')) return 'green';
+        if (v.includes('cancelado')) return 'red';
+        if (v.includes('nuevo') || v.includes('espera') || v.includes('duda'))
+          return 'amber';
+        if (v.includes('mejora')) return 'purple';
+        return 'blue';
+      }
+      function makeChart(id, type, labels, datasets, options = {}) {
+        const canvas = document.getElementById(id);
+        if (!canvas) return null;
+        const chart = new Chart(canvas, {
+          type,
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { boxWidth: 12, usePointStyle: true },
+              },
+            },
+            scales:
+              type === 'doughnut'
+                ? {}
+                : {
+                    x: { grid: { display: false } },
+                    y: {
+                      beginAtZero: true,
+                      ticks: { precision: 0 },
+                      grid: { color: '#eef2f7' },
+                    },
+                  },
+            ...options,
+          },
+        });
+        charts.push(chart);
+      }
+      function uniqueValues(key) {
+        return [...new Set(tickets.map((t) => t[key]).filter(Boolean))].sort();
+      }
+      function populateFilters() {
+        const filterMap = {
+          statusFilter: 'status',
+          typeFilter: 'taskType',
+          systemFilter: 'system',
+        };
+        Object.entries(filterMap).forEach(([selectId, key]) => {
+          const select = document.getElementById(selectId);
+          uniqueValues(key).forEach((value) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+          });
+        });
+      }
+      function filteredTickets() {
+        const status = document.getElementById('statusFilter').value;
+        const type = document.getElementById('typeFilter').value;
+        const system = document.getElementById('systemFilter').value;
+
+        return tickets.filter((t) => {
+          return (
+            (!status || t.status === status) &&
+            (!type || t.taskType === type) &&
+            (!system || t.system === system)
+          );
+        });
+      }
+      function renderKpis(data) {
+        const total = data.length;
+        const finished = data.filter((t) => t.status === 'TERMINADO').length;
+        const open = data.filter(
+          (t) => !['TERMINADO', 'CANCELADO'].includes(t.status),
+        ).length;
+        const bugs = data.filter((t) => t.taskType === 'ERROR').length;
+        const improvements = data.filter((t) => t.taskType === 'MEJORA').length;
+        const quoted = data.filter((t) => t.status === 'COTIZADO').length;
+        const cards = [
+          ['Total tickets', total, 'registros filtrados'],
+          ['Abiertos', open, 'no terminados / no cancelados'],
+          [
+            'Terminados',
+            finished,
+            `${total ? Math.round((finished / total) * 100) : 0}% del total`,
+          ],
+          ['Bugs / errores', bugs, 'Tipo_Tarea = ERROR'],
+          ['Mejoras', improvements, 'Tipo_Tarea = MEJORA'],
+          ['Cotizados', quoted, 'Tickets Cotizados abiertos'],
+        ];
+        document.getElementById('kpis').innerHTML = cards
+          .map(
+            ([label, value, note]) => `
+    <article class='card kpi'><div class='kpi-label'>${label}</div><div><div class='kpi-value'>${value}</div><div class='kpi-note'>${note}</div></div></article>
+  `,
+          )
+          .join('');
+      }
+      function renderLists(data) {
+        const systems = topEntries(countBy(data, 'system'), 7);
+        const total = data.length || 1;
+
+        document.getElementById('systemList').innerHTML = systems
+          .map(
+            ([name, count], index) => `
+        <div class='leaderboard-item'>
+          <div class='rank'>${index + 1}</div>
+          <div class='leaderboard-name'>
+            <b>${name}</b>
+            <small>${Math.round((count / total) * 100)}% del volumen filtrado</small>
+          </div>
+          <div class='leaderboard-count'>${count}</div>
+        </div>
+      `,
+          )
+          .join('');
+      }
+
+      function renderCharts(data) {
+        destroyCharts();
+
+        const byDate = countBy(
+          data.filter((t) => t.created),
+          'created',
+        );
+        const dateLabels = Object.keys(byDate).sort();
+        makeChart('trendChart', 'line', dateLabels, [
+          {
+            label: 'Tickets',
+            data: dateLabels.map((d) => byDate[d]),
+            borderWidth: 3,
+            tension: 0.35,
+            fill: true,
+            borderColor: '#FD9A00',
+            backgroundColor: 'rgba(253, 154, 0, 0.25)',
+            pointBackgroundColor: '#FD9A00',
+            pointBorderColor: '#FD9A00',
+            pointRadius: 4,
+          },
+        ]);
+
+        const status = topEntries(countBy(data, 'status'), 8);
+
+        const statusColors = {
+          TERMINADO: '#558E28',
+          NUEVO: '#676767',
+          DUDA: '#0079A5',
+          CANCELADO: '#D90B00',
+          COTIZADO: '#8500AF',
+          PROCESO: '#C97100',
+          ESPERA: '#00A3D1',
+        };
+
+        makeChart(
+          'statusChart',
+          'doughnut',
+          status.map((x) => x[0]),
+          [
+            {
+              label: 'Tickets',
+              data: status.map((x) => x[1]),
+              borderWidth: 2,
+              backgroundColor: status.map(
+                ([label]) => statusColors[label] || '#94a3b8',
+              ),
+            },
+          ],
+          { cutout: '62%' },
+        );
+
+        const types = topEntries(countBy(data, 'taskType'), 8);
+        makeChart(
+          'typeChart',
+          'bar',
+          types.map((x) => x[0]),
+          [
+            {
+              label: 'Tickets',
+              data: types.map((x) => x[1]),
+              borderRadius: 10,
+              backgroundColor: 'rgba(253, 154, 0, 0.35)',
+              borderColor: '#FD9A00',
+              borderWidth: 2,
+            },
+          ],
+        );
+
+        const departments = topEntries(countBy(data, 'department'), 8);
+        makeChart(
+          'departmentChart',
+          'bar',
+          departments.map((x) => x[0]),
+          [
+            {
+              label: 'Tickets',
+              data: departments.map((x) => x[1]),
+              borderRadius: 10,
+            },
+          ],
+          { indexAxis: 'y' },
+        );
+
+        const modules = topEntries(countBy(data, 'module'), 8);
+        makeChart(
+          'moduleChart',
+          'bar',
+          modules.map((x) => x[0]),
+          [
+            {
+              label: 'Tickets',
+              data: modules.map((x) => x[1]),
+              borderRadius: 10,
+            },
+          ],
+          { indexAxis: 'y' },
+        );
+
+        const reviewers = topEntries(countBy(data, 'reviewer'), 8);
+        makeChart(
+          'reviewerChart',
+          'bar',
+          reviewers.map((x) => x[0]),
+          [
+            {
+              label: 'Tickets',
+              data: reviewers.map((x) => x[1]),
+              borderRadius: 10,
+            },
+          ],
+          { indexAxis: 'y' },
+        );
+      }
+      function render() {
+        const data = filteredTickets();
+        renderKpis(data);
+        renderCharts(data);
+      }
+      populateFilters();
+      ['statusFilter', 'typeFilter', 'systemFilter'].forEach((id) =>
+        document.getElementById(id).addEventListener('input', render),
+      );
+      render();
+    </script>
+  </body>
+</html>

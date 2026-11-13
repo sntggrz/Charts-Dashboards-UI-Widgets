@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <title>Treemap</title>
+    <meta charset="utf-8" />
+  </head>
+  <body style="height: 100%; margin: 0">
+    <div id="container" style="height: 100%"></div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+
+    <script type="text/javascript">
+      var dom = document.getElementById("container");
+      var myChart = echarts.init(dom, null, {
+        renderer: "canvas",
+        useDirtyRect: false,
+      });
+
+      var option;
+
+      option = {
+        title: {
+          text: "Top 5 de tipos de evento",
+          left: "center",
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+          },
+        },
+        tooltip: {
+          trigger: "item",
+          formatter: function (params) {
+            // Format value as a numeric value
+            return `${params.name}: ${new Intl.NumberFormat().format(
+              params.value
+            )}`;
+          },
+        },
+        series: [
+          {
+            type: "treemap",
+            data: [
+              {
+                name: "XV Años",
+                value: 100000,
+                itemStyle: {
+                  color: "#FCDD6F",
+                },
+              },
+              {
+                name: "Boda",
+                value: 200000,
+                itemStyle: {
+                  color: "#A07C1B",
+                },
+              },
+            ],
+            breadcrumb: {
+              show: false,
+            },
+            // roam: false,
+            // nodeClick: undefined,
+            top: "13%",
+            left: "2%",
+            right: "2%",
+            label: {
+              show: true,
+              fontSize: 14,
+              color: "#fff",
+              textBorderColor: "#000000",
+              textBorderWidth: 2,
+            },
+          },
+        ],
+      };
+
+      if (option && typeof option === "object") {
+        myChart.setOption(option);
+      }
+
+      window.addEventListener("resize", myChart.resize);
+    </script>
+  </body>
+</html>

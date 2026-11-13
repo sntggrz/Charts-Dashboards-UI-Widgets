@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <title>Live Data Line</title>
+    <meta charset="utf-8" />
+  </head>
+  <body style="height: 100%; margin: 0">
+    <div id="container" style="height: 100%"></div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+    <script type="text/javascript">
+      var dom = document.getElementById('container');
+      var myChart = echarts.init(dom, null, {
+        renderer: 'canvas',
+        useDirtyRect: false,
+      });
+
+      const dates = [
+        '2023-12-01T00:00:00Z',
+        '2024-01-01T00:00:00Z',
+        '2024-02-01T00:00:00Z',
+        '2024-03-01T00:00:00Z',
+        '2024-04-01T00:00:00Z',
+      ];
+
+      const ventas = [1551.58, 1950.58, 1500.45, 1800.67, 2000.99]; // Data for 'Ventas'
+      const invitados = [60, 30, 45, 50, 60]; // Data for 'Invitados'
+      const ventaPorInvitado = [3.3, 4.5, 3.3, 5.3, 3.3]; // Data for 'Venta x invitado'
+
+      const option = {
+        title: {
+          text: 'Ventas general',
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 'bold',
+          },
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow', // Highlights the bar or line
+          },
+        },
+        legend: {
+          data: ['Ventas', 'Invitados', 'Venta x invitado'],
+        },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          boundaryGap: true,
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: 'Ventas',
+            nameLocation: 'middle', // Position the title next to the axis
+            nameRotate: 90, // Rotate the title vertically
+            splitLine: {
+              show: false,
+            },
+            nameTextStyle: {
+              fontSize: 12,
+              fontWeight: 'bold',
+            },
+            nameGap: 55, // Add space between the title and axis numbers
+            position: 'left',
+          },
+          {
+            type: 'value',
+            name: 'Invitados y Venta x invitado',
+            nameLocation: 'middle', // Position the title next to the axis
+            nameRotate: -90, // Rotate the title vertically
+            splitLine: {
+              show: false,
+            },
+            nameTextStyle: {
+              fontSize: 12,
+              fontWeight: 'bold',
+            },
+            nameGap: 55, // Add space between the title and axis numbers
+            position: 'right',
+          },
+        ],
+        series: [
+          {
+            name: 'Ventas',
+            type: 'line',
+            data: ventas,
+            yAxisIndex: 0,
+            itemStyle: { color: '#6C2D18' },
+          },
+          {
+            name: 'Invitados',
+            type: 'bar',
+            data: invitados,
+            yAxisIndex: 1,
+            itemStyle: { color: '#D3B13B' },
+          },
+          {
+            name: 'Venta x invitado',
+            type: 'bar',
+            data: ventaPorInvitado,
+            yAxisIndex: 1,
+            itemStyle: { color: '#D2AEA9' },
+          },
+        ],
+      };
+
+      if (option && typeof option === 'object') {
+        myChart.setOption(option);
+      }
+
+      window.addEventListener('resize', myChart.resize);
+    </script>
+  </body>
+</html>

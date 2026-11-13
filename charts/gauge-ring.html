@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <meta charset="utf-8" />
+    <title>Static Gauge Chart</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: #f1f1f1;
+      }
+      #container {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"
+    ></script>
+
+    <script type="text/javascript">
+      var maxValue = 0;
+
+      if (!maxValue || maxValue <= 0) {
+        maxValue = 1;
+      }
+
+      var dom = document.getElementById('container');
+      var myChart = echarts.init(dom, null, {
+        renderer: 'canvas',
+        useDirtyRect: false,
+      });
+
+      function calculatePercentage(value) {
+        return maxValue > 1 ? (value / maxValue) * 100 : 0;
+      }
+
+      var gaugeData = [
+        {
+          value: calculatePercentage(100000),
+          title: {
+            offsetCenter: ['0%', '-40%'],
+          },
+          detail: {
+            valueAnimation: true,
+            offsetCenter: ['0%', '-25%'],
+          },
+          itemStyle: {
+            color: '#FF5733',
+          },
+        },
+        {
+          value: calculatePercentage(40000),
+          name: 'Ejecutado',
+          title: {
+            offsetCenter: ['0%', '-5%'],
+          },
+          detail: {
+            valueAnimation: true,
+            offsetCenter: ['0%', '10%'],
+          },
+          itemStyle: {
+            color: '#3498DB',
+          },
+        },
+        {
+          value: calculatePercentage(60000),
+          name: 'Estimado',
+          title: {
+            offsetCenter: ['0%', '30%'],
+          },
+          detail: {
+            valueAnimation: true,
+            offsetCenter: ['0%', '45%'],
+          },
+          itemStyle: {
+            color: '#2ECC71',
+          },
+        },
+      ];
+
+      var option = {
+        series: [
+          {
+            type: 'gauge',
+            max: 100,
+            startAngle: 90,
+            endAngle: -270,
+            center: ['50%', '60%'],
+            pointer: {
+              show: false,
+            },
+            progress: {
+              show: true,
+              overlap: false,
+              roundCap: true,
+              clip: false,
+            },
+            axisLine: {
+              lineStyle: {
+                width: 35,
+                color: [[1, '#ddd']],
+              },
+            },
+            splitLine: {
+              show: false,
+              distance: 0,
+              length: 10,
+            },
+            axisTick: {
+              show: false,
+            },
+            axisLabel: {
+              show: false,
+              formatter: '{value}%',
+            },
+            data: gaugeData,
+            title: {
+              fontSize: 12,
+            },
+            detail: {
+              width: 100,
+              height: 12,
+              fontSize: 12,
+              color: 'inherit',
+              borderColor: 'inherit',
+              borderRadius: 20,
+              borderWidth: 0.5,
+              formatter: function (value) {
+                return value.toFixed(1) + '%';
+              },
+            },
+          },
+        ],
+      };
+
+      myChart.setOption(option);
+
+      window.addEventListener('resize', myChart.resize);
+    </script>
+  </body>
+</html>

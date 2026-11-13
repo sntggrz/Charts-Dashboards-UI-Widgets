@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Area Chart with Goal</title>
+    <meta charset="utf-8" />
+    <style>
+      #container {
+        width: 100%;
+        height: 100%;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <script type="text/javascript">
+      var dom = document.getElementById("container");
+      var myChart = echarts.init(dom);
+      var app = {};
+      option = null;
+
+      var datesPrograma = [
+        "Agosto 05, 2024",
+        "Agosto 06, 2024",
+        "Agosto 07, 2024",
+        "Agosto 08, 2024",
+        "Agosto 09, 2024",
+        "Agosto 12, 2024",
+        "Agosto 13, 2024",
+        "Agosto 14, 2024",
+        "Agosto 15, 2024",
+        "Agosto 16, 2024",
+        "Agosto 19, 2024",
+        "Agosto 20, 2024",
+        "Agosto 21, 2024",
+        "Agosto 22, 2024",
+        "Agosto 23, 2024",
+        "Agosto 26, 2024",
+        "Agosto 27, 2024",
+        "Agosto 28, 2024",
+        "Agosto 29, 2024",
+        "Agosto 31, 2024",
+      ];
+      var dataPrograma = [
+        50, 50, 50, 50, 50, 100, 100, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+        50, 50, 50,
+      ];
+
+      var datesEntregado = [
+        "Agosto 05, 2024",
+        "Agosto 06, 2024",
+        "Agosto 07, 2024",
+        "Agosto 08, 2024",
+        "Agosto 09, 2024",
+        "Agosto 12, 2024",
+        "Agosto 13, 2024",
+        "Agosto 14, 2024",
+        "Agosto 15, 2024",
+        "Agosto 16, 2024",
+        "Agosto 19, 2024",
+        "Agosto 20, 2024",
+        "Agosto 21, 2024",
+        "Agosto 22, 2024",
+        "Agosto 23, 2024",
+        "Agosto 26, 2024",
+        "Agosto 27, 2024",
+        "Agosto 28, 2024",
+        "Agosto 29, 2024",
+        "Agosto 31, 2024",
+      ];
+      var dataEntregado = [
+        40, 50, 22, 30, 22, 50, 22, 20, 25, 30, 22, 45, 30, 50, 40, 25, 25, 20,
+        47, 50,
+      ];
+      var goalValue = 500;
+      var goalLabel = "Planta Norte";
+
+      var allDates = Array.from(
+        new Set(datesPrograma.concat(datesEntregado))
+      ).sort();
+
+      var alignedPrograma = allDates.map((date) =>
+        datesPrograma.includes(date)
+          ? dataPrograma[datesPrograma.indexOf(date)]
+          : null
+      );
+      var alignedEntregado = allDates.map((date) =>
+        datesEntregado.includes(date)
+          ? dataEntregado[datesEntregado.indexOf(date)]
+          : null
+      );
+
+      var allValues = alignedPrograma.concat(alignedEntregado, [goalValue]);
+      var minValue = Math.min(...allValues);
+      var maxValue = Math.max(...allValues);
+      var padding = goalValue > 0 ? (maxValue - minValue) * 0.2 : 0;
+
+      var yAxisMin = Math.max(0, minValue - padding);
+
+      var markLineConfig =
+        goalValue !== 0
+          ? {
+              symbol: "none",
+              emphasis: {
+                lineStyle: {
+                  color: "blue",
+                  width: 1,
+                  type: "dashed",
+                },
+              },
+              data: [
+                {
+                  yAxis: goalValue,
+                  label: {
+                    formatter: `${goalLabel}: {c} Ton`,
+                    fontWeight: "bold",
+                    position: "middle",
+                  },
+                  lineStyle: {
+                    color: "blue",
+                    type: "dashed",
+                  },
+                },
+              ],
+            }
+          : null;
+
+      option = {
+        tooltip: {
+          trigger: "axis",
+          position: function (pt, params, dom, rect, size) {
+            var x = pt[0];
+            var viewWidth = size.viewSize[0];
+            var tooltipWidth = size.contentSize[0];
+
+            if (x < viewWidth / 2) {
+              return [x + 10, "20%"];
+            } else {
+              return [x - tooltipWidth - 10, "20%"];
+            }
+          },
+        },
+        grid: {
+          left: "5%",
+          right: "5%",
+          top: "2%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: allDates,
+        },
+        yAxis: {
+          type: "value",
+          min: yAxisMin,
+          max: maxValue + padding,
+        },
+        dataZoom: [
+          {
+            type: "slider",
+            start: 0,
+            end: 100,
+            backgroundColor: "#f4f4f4",
+            dataBackground: {
+              lineStyle: {
+                color: "#dcdcdc",
+                width: 1,
+              },
+              areaStyle: {
+                color: "#f4f4f4",
+              },
+            },
+            fillerColor: "rgba(128, 128, 128, 0.4)",
+            borderColor: "#aaa",
+            handleIcon:
+              "M0 94.3286C0 96.8677 0.917971 99.0491 2.88453 100.969L88.3203 185.941C90.1099 187.693 92.4597 188.695 94.7461 188.695C100.17 188.695 103.635 184.948 103.635 179.928C103.635 177.343 102.802 175.225 101.294 173.679L58.5731 131.556L27.1265 102.262L62.0692 103.18L237.936 103.18L272.878 102.262L241.432 131.556L198.711 173.679C197.166 175.225 196.332 177.343 196.332 179.928C196.332 184.948 199.835 188.695 205.259 188.695C207.545 188.695 209.979 187.693 211.647 185.941L297.12 100.969C299.087 99.0491 300.005 96.8677 300.005 94.3286C300.005 91.8274 299.087 89.6082 297.12 87.7722L211.647 2.8003C209.979 1.04859 207.545 0 205.259 0C199.835 0 196.332 3.79395 196.332 8.85134C196.332 11.4368 197.166 13.5547 198.711 15.0623L241.432 57.1851L272.878 86.4795L237.936 85.5151L62.0692 85.5151L27.1265 86.4795L58.5731 57.1851L101.294 15.0623C102.802 13.5547 103.635 11.4368 103.635 8.85134C103.635 3.79395 100.17 0 94.7461 0C92.4597 0 90.1099 1.04859 88.3203 2.8003L2.88453 87.7722C0.917971 89.6082 0 91.8274 0 94.3286Z",
+            handleSize: "50%",
+            handleStyle: {
+              color: "#808080",
+              borderColor: "#808080",
+              borderWidth: 1,
+            },
+            emphasis: {
+              handleStyle: {
+                color: "#808080",
+                borderColor: "#808080",
+                borderWidth: 1,
+              },
+            },
+            textStyle: {
+              color: "#808080",
+              fontSize: 10,
+            },
+          },
+          {
+            type: "inside",
+            zoomLock: false,
+            throttle: 50,
+          },
+        ],
+        series: [
+          {
+            name: "Programa",
+            type: "line",
+            smooth: false,
+            symbol: "none",
+            sampling: "average",
+            itemStyle: {
+              color: "#CB312A",
+            },
+            data: alignedPrograma,
+            connectNulls: true,
+          },
+          {
+            name: "Entregado",
+            type: "line",
+            smooth: false,
+            symbol: "none",
+            sampling: "average",
+            itemStyle: {
+              color: "#808080",
+            },
+            data: alignedEntregado,
+            connectNulls: true,
+            markLine: markLineConfig,
+          },
+        ],
+      };
+      if (option && typeof option === "object") {
+        myChart.setOption(option, true);
+      }
+      window.addEventListener("resize", function () {
+        myChart.resize();
+      });
+    </script>
+  </body>
+</html>

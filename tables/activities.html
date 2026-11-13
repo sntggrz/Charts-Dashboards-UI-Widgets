@@ -1,0 +1,1617 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activities & Subactivities</title>
+
+    <style>
+      :root {
+        --bg: #464242;
+        --surface: #252424;
+        --surface-2: #2e2c2c;
+        --border: #3a3737;
+        --border-strong: #464242;
+
+        --text: #e8e4e0;
+        --text-muted: #9a9694;
+        --text-dim: #6b6b6b;
+
+        --accent: #2b28a6;
+        --accent-hover: #3a37c4;
+        --danger: #d97766;
+
+        --row-hover: #2e2c2c;
+        --sub-bg: #1f1e1e;
+
+        --status-done: #8aa876;
+        --status-progress: #d4a05e;
+        --status-pending: #9a9694;
+
+        --radius: 14px;
+        --pad-y: 12px;
+        --pad-x: 16px;
+        --font:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px 20px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        font-size: 12px;
+        line-height: 1.5;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .container {
+        max-width: 1100px;
+        height: calc(100vh - 48px);
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header,
+      .filters {
+        flex: 0 0 auto;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 20px;
+        gap: 16px;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+      }
+
+      .subtitle {
+        color: var(--text-muted);
+        margin: 0;
+        font-size: 10px;
+      }
+
+      .filters {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .filter-field label {
+        font-size: 9px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .filter-field input,
+      .filter-field select {
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 12px;
+        background: var(--surface);
+        color: var(--text);
+        min-width: 140px;
+      }
+
+      .filter-field input:focus,
+      .filter-field select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .filter-search {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .filter-search input {
+        width: 100%;
+      }
+
+      .filter-checkbox {
+        min-height: 58px;
+        justify-content: flex-end;
+      }
+
+      .check-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text);
+        font-size: 11px;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .check-label input {
+        min-width: auto;
+      }
+
+      .btn {
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn:hover {
+        background: var(--row-hover);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+
+      .btn-icon {
+        padding: 4px 8px;
+        font-size: 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .btn-icon:hover {
+        color: var(--text);
+        background: var(--row-hover);
+      }
+
+      .btn-icon.danger:hover {
+        color: var(--danger);
+        background: rgba(217, 119, 102, 0.1);
+      }
+
+      .btn-icon svg {
+        width: 12px;
+        height: 12px;
+        display: block;
+        pointer-events: none;
+      }
+
+      #clear-filters.hidden {
+        display: none;
+      }
+
+      .table-wrapper {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        flex: 1;
+        overflow: auto;
+        min-height: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        text-align: left;
+        font-weight: 500;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        padding: var(--pad-y) var(--pad-x);
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      thead th[data-sort] {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      thead th[data-sort]:hover {
+        color: var(--text);
+      }
+
+      .sort-mark {
+        color: var(--text-muted);
+        font-size: 10px;
+        margin-left: 4px;
+      }
+
+      tbody td {
+        padding: var(--pad-y) var(--pad-x);
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .activity-row {
+        transition: background 0.15s ease;
+      }
+
+      .activity-row:hover {
+        background: var(--row-hover);
+      }
+
+      .activity-name {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .chevron {
+        display: inline-block;
+        transition: transform 0.2s ease;
+        color: var(--text-muted);
+        font-size: 9px;
+      }
+
+      .activity-row.open .chevron {
+        transform: rotate(90deg);
+      }
+
+      .sub-row {
+        background: var(--sub-bg);
+      }
+
+      .sub-row td {
+        color: var(--text);
+        font-size: 11px;
+      }
+
+      .sub-row td:first-child {
+        padding-left: 44px;
+      }
+
+      .sub-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .sub-done {
+        color: var(--text-muted);
+        text-decoration: line-through;
+        text-decoration-color: var(--text-muted);
+      }
+
+      .add-sub-row td {
+        padding-left: 44px;
+        background: var(--sub-bg);
+      }
+
+      .project-name {
+        color: var(--text-muted);
+        font-size: 11px;
+      }
+
+      .check {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 1.5px solid var(--border);
+        border-radius: 4px;
+        background: var(--surface);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+        vertical-align: middle;
+      }
+
+      .check:hover {
+        border-color: var(--text-muted);
+      }
+
+      .check:checked {
+        background: var(--status-done);
+        border-color: var(--status-done);
+      }
+
+      .check:checked::after {
+        content: '';
+        width: 5px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg) translate(-1px, -1px);
+      }
+
+      .col-project {
+        width: 150px;
+      }
+
+      .col-owner {
+        width: 128px;
+      }
+
+      .col-priority {
+        width: 110px;
+      }
+
+      .col-date {
+        width: 88px;
+        white-space: nowrap;
+      }
+
+      .col-actions {
+        width: 72px;
+        text-align: right;
+      }
+
+      td.cell-date {
+        white-space: nowrap;
+      }
+
+      .priority {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 500;
+        background: var(--surface-2);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+      }
+
+      .priority::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .priority.high {
+        background: rgba(239, 68, 68, 0.18);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+
+      .priority.middle {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fcd34d;
+        border-color: rgba(245, 158, 11, 0.4);
+      }
+
+      .priority.low {
+        background: rgba(34, 197, 94, 0.18);
+        color: #86efac;
+        border-color: rgba(34, 197, 94, 0.4);
+      }
+
+      .priority-progress {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .completion {
+        color: var(--text-muted);
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .date-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        white-space: nowrap;
+        position: relative;
+        cursor: default;
+      }
+
+      .date-badge::after {
+        content: attr(data-status);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%) translateY(4px);
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.15s ease,
+          transform 0.15s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 30;
+      }
+
+      .date-badge:hover::after {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .date-badge.ontime {
+        background: rgba(34, 197, 94, 0.18);
+        color: #86efac;
+        border-color: rgba(34, 197, 94, 0.4);
+      }
+
+      .date-badge.close {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fcd34d;
+        border-color: rgba(245, 158, 11, 0.4);
+      }
+
+      .date-badge.delay {
+        background: rgba(239, 68, 68, 0.18);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+
+      .date-badge.done {
+        background: rgba(34, 197, 94, 0.22);
+        color: #bbf7d0;
+        border-color: rgba(34, 197, 94, 0.45);
+      }
+
+      .date-badge.done-late {
+        background: rgba(239, 68, 68, 0.18);
+        color: #fecaca;
+        border-color: rgba(239, 68, 68, 0.45);
+      }
+
+      .avatar {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: default;
+        user-select: none;
+      }
+
+      .avatar.empty {
+        background: var(--border);
+        color: var(--text-muted);
+      }
+
+      .avatar[data-name]::after {
+        content: attr(data-name);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%) translateY(4px);
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition:
+          opacity 0.15s ease,
+          transform 0.15s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 20;
+      }
+
+      .avatar[data-name]:hover::after {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .row-actions {
+        display: flex;
+        gap: 2px;
+        justify-content: flex-end;
+      }
+
+      .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 10px;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+
+      .modal-overlay.open {
+        display: flex;
+      }
+
+      .modal {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal h2 {
+        margin: 0 0 16px 0;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .field {
+        margin-bottom: 12px;
+      }
+
+      .field label {
+        display: block;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+      }
+
+      .field input,
+      .field select {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 12px;
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      .field input:focus,
+      .field select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <div>
+          <h1>All task</h1>
+          <p class="subtitle">
+            Click a row to expand. Check a subactivity to mark it done.
+          </p>
+        </div>
+        <button class="btn btn-primary" id="add-activity-btn">
+          + Add activity
+        </button>
+      </div>
+
+      <div class="filters">
+        <div class="filter-field filter-search">
+          <label>Search</label>
+          <input
+            type="text"
+            id="f-search"
+            placeholder="Search activities, responsable, project..."
+          />
+        </div>
+
+        <div class="filter-field">
+          <label>Project</label>
+          <select id="f-project">
+            <option value="">All projects</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Priority</label>
+          <select id="f-priority">
+            <option value="">All priorities</option>
+            <option value="high">High</option>
+            <option value="middle">Middle</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Due date from</label>
+          <input type="date" id="f-start" />
+        </div>
+
+        <div class="filter-field">
+          <label>Due date to</label>
+          <input type="date" id="f-end" />
+        </div>
+
+        <div class="filter-field filter-checkbox">
+          <label class="check-label">
+            <input type="checkbox" id="f-hide-done" />
+            Hide 100% finished
+          </label>
+        </div>
+
+        <button class="btn" id="clear-filters">Clear</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="name">
+                Activity / Subactivity <span class="sort-mark"></span>
+              </th>
+              <th class="col-project" data-sort="project">
+                Project <span class="sort-mark"></span>
+              </th>
+              <th class="col-owner" data-sort="owner">
+                Responsable <span class="sort-mark"></span>
+              </th>
+              <th class="col-priority" data-sort="priority">
+                Priority <span class="sort-mark"></span>
+              </th>
+              <th class="col-date" data-sort="due">
+                Due date <span class="sort-mark"></span>
+              </th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+      <div class="modal">
+        <h2 id="modal-title">Add</h2>
+        <div class="field">
+          <label>Name</label>
+          <input type="text" id="m-name" />
+        </div>
+        <div class="field" id="m-project-wrap">
+          <label>Project</label>
+          <input
+            type="text"
+            id="m-project"
+            list="project-list"
+            placeholder="Type or pick a project"
+          />
+          <datalist id="project-list"></datalist>
+        </div>
+        <div class="field">
+          <label>Responsable</label>
+          <input type="text" id="m-owner" />
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="m-priority">
+            <option value="">None</option>
+            <option value="high">High</option>
+            <option value="middle">Middle</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Due date</label>
+          <input type="date" id="m-due" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="modal-cancel">Cancel</button>
+          <button class="btn btn-primary" id="modal-save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let data = [
+        {
+          id: 1,
+          name: 'Website redesign',
+          project: 'Brand Refresh',
+          owner: 'Ana López',
+          priority: 'high',
+          due: '2026-06-10',
+          subactivities: [
+            {
+              id: 11,
+              name: 'Wireframes',
+              owner: 'Ana López',
+              priority: 'high',
+              done: true,
+              completedAt: '2026-05-18',
+              due: '2026-05-20',
+            },
+            {
+              id: 12,
+              name: 'Visual design',
+              owner: 'Diego Ruiz',
+              priority: 'high',
+              done: false,
+              completedAt: '',
+              due: '2026-05-30',
+            },
+            {
+              id: 13,
+              name: 'Frontend build',
+              owner: 'Mario Sanz',
+              priority: 'middle',
+              done: false,
+              completedAt: '',
+              due: '2026-06-05',
+            },
+            {
+              id: 14,
+              name: 'QA & launch',
+              owner: 'Ana López',
+              priority: 'middle',
+              done: false,
+              completedAt: '',
+              due: '2026-06-10',
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: 'Q3 marketing campaign',
+          project: 'Brand Refresh',
+          owner: 'Sofía Méndez',
+          priority: 'middle',
+          due: '2026-07-01',
+          subactivities: [
+            {
+              id: 21,
+              name: 'Audience research',
+              owner: 'Sofía Méndez',
+              priority: 'high',
+              done: false,
+              completedAt: '',
+              due: '2026-06-01',
+            },
+            {
+              id: 22,
+              name: 'Creative concept',
+              owner: 'Diego Ruiz',
+              priority: 'low',
+              done: false,
+              completedAt: '',
+              due: '2026-06-15',
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: 'Hire backend engineer',
+          project: 'Team Growth',
+          owner: 'Carlos Vega',
+          priority: 'high',
+          due: '2026-06-30',
+          subactivities: [
+            {
+              id: 31,
+              name: 'Write job posting',
+              owner: 'Carlos Vega',
+              priority: 'middle',
+              done: true,
+              completedAt: '2026-05-09',
+              due: '2026-05-10',
+            },
+            {
+              id: 32,
+              name: 'Screen candidates',
+              owner: 'Carlos Vega',
+              priority: 'high',
+              done: false,
+              completedAt: '',
+              due: '2026-06-01',
+            },
+            {
+              id: 33,
+              name: 'Technical interviews',
+              owner: 'Mario Sanz',
+              priority: 'high',
+              done: false,
+              completedAt: '',
+              due: '2026-06-20',
+            },
+            {
+              id: 34,
+              name: 'Offer & onboarding',
+              owner: 'Carlos Vega',
+              priority: 'middle',
+              done: false,
+              completedAt: '',
+              due: '2026-06-30',
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: 'Migrate to new CRM',
+          project: 'Internal Tools',
+          owner: 'Lucía Romero',
+          priority: 'low',
+          due: '2026-04-30',
+          subactivities: [
+            {
+              id: 41,
+              name: 'Export data',
+              owner: 'Lucía Romero',
+              priority: 'middle',
+              done: true,
+              completedAt: '2026-04-10',
+              due: '2026-04-10',
+            },
+            {
+              id: 42,
+              name: 'Import & validate',
+              owner: 'Mario Sanz',
+              priority: 'high',
+              done: true,
+              completedAt: '2026-04-26',
+              due: '2026-04-25',
+            },
+            {
+              id: 43,
+              name: 'Train team',
+              owner: 'Lucía Romero',
+              priority: 'low',
+              done: true,
+              completedAt: '2026-04-30',
+              due: '2026-04-30',
+            },
+          ],
+        },
+      ];
+
+      const openSet = new Set();
+      let nextId = 1000;
+      const newId = () => ++nextId;
+
+      const sortState = {
+        key: '',
+        dir: 'asc',
+      };
+
+      const priorityOrder = {
+        high: 1,
+        middle: 2,
+        low: 3,
+        '': 4,
+      };
+
+      const filters = {
+        search: '',
+        project: '',
+        priority: '',
+        start: '',
+        end: '',
+        hideDone: false,
+      };
+
+      const tbody = document.getElementById('table-body');
+      const projectSelect = document.getElementById('f-project');
+      const projectList = document.getElementById('project-list');
+
+      function sortActivities(items) {
+        if (!sortState.key) return items;
+
+        return [...items].sort((a, b) => {
+          let av = a[sortState.key] ?? '';
+          let bv = b[sortState.key] ?? '';
+
+          if (sortState.key === 'priority') {
+            av = priorityOrder[av] ?? 4;
+            bv = priorityOrder[bv] ?? 4;
+          }
+
+          if (sortState.key === 'due') {
+            av = av || '9999-12-31';
+            bv = bv || '9999-12-31';
+          }
+
+          if (typeof av === 'string') av = av.toLowerCase();
+          if (typeof bv === 'string') bv = bv.toLowerCase();
+
+          if (av < bv) return sortState.dir === 'asc' ? -1 : 1;
+          if (av > bv) return sortState.dir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      function updateSortMarks() {
+        document.querySelectorAll('thead th[data-sort]').forEach((th) => {
+          const mark = th.querySelector('.sort-mark');
+          if (!mark) return;
+
+          if (th.dataset.sort === sortState.key) {
+            mark.textContent = sortState.dir === 'asc' ? '▲' : '▼';
+          } else {
+            mark.textContent = '';
+          }
+        });
+      }
+
+      function matchesFilters(activity) {
+        if (filters.hideDone && completionPercent(activity) === 100)
+          return false;
+
+        if (filters.project && activity.project !== filters.project)
+          return false;
+
+        if (filters.priority && activity.priority !== filters.priority)
+          return false;
+
+        if (filters.start && (!activity.due || activity.due < filters.start))
+          return false;
+
+        if (filters.end && (!activity.due || activity.due > filters.end))
+          return false;
+
+        if (filters.search) {
+          const q = filters.search.toLowerCase();
+          const hay = [
+            activity.name,
+            activity.project,
+            activity.owner,
+            activity.priority,
+            ...activity.subactivities.map(
+              (s) => `${s.name} ${s.owner} ${s.priority}`,
+            ),
+          ]
+            .join(' ')
+            .toLowerCase();
+
+          if (!hay.includes(q)) return false;
+        }
+
+        return true;
+      }
+
+      function refreshProjectOptions() {
+        const projects = [
+          ...new Set(data.map((a) => a.project).filter(Boolean)),
+        ].sort();
+
+        const current = projectSelect.value;
+        projectSelect.innerHTML =
+          '<option value="">All projects</option>' +
+          projects
+            .map((p) => `<option value="${esc(p)}">${esc(p)}</option>`)
+            .join('');
+
+        projectSelect.value = projects.includes(current) ? current : '';
+
+        projectList.innerHTML = projects
+          .map((p) => `<option value="${esc(p)}">`)
+          .join('');
+      }
+
+      function updateClearButton() {
+        const hasFilters =
+          filters.search ||
+          filters.project ||
+          filters.priority ||
+          filters.start ||
+          filters.end ||
+          filters.hideDone;
+
+        document
+          .getElementById('clear-filters')
+          .classList.toggle('hidden', !hasFilters);
+      }
+
+      function render() {
+        updateClearButton();
+        refreshProjectOptions();
+        tbody.innerHTML = '';
+
+        const visible = sortActivities(data.filter(matchesFilters));
+        updateSortMarks();
+
+        if (visible.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No activities match your filters.</td></tr>`;
+          return;
+        }
+
+        visible.forEach((activity) => {
+          const subs = activity.subactivities;
+          const isOpen = openSet.has(activity.id);
+          const activityDone = isActivityDone(activity);
+          const activityCompletedAt = getActivityCompletedAt(activity);
+
+          const tr = document.createElement('tr');
+          tr.className = 'activity-row' + (isOpen ? ' open' : '');
+          tr.innerHTML = `
+            <td>
+              <div class="activity-name" data-toggle="${activity.id}">
+                <span class="chevron">▶</span>
+                <span>${esc(activity.name)}</span>
+              </div>
+            </td>
+            <td>${activity.project ? `<span class="project-name">${esc(activity.project)}</span>` : ''}</td>
+            <td>${avatarHtml(activity.owner)}</td>
+            <td>
+              <div class="priority-progress">
+                ${priorityHtml(activity.priority)}
+                <span class="completion">${completionPercent(activity)}%</span>
+              </div>
+            </td>
+            <td class="cell-date">${dueDateBadge(activity.due, activityDone, activityCompletedAt)}</td>
+            <td class="col-actions">
+              <div class="row-actions">
+                <button class="btn-icon" title="Follow-up history" data-action-activity="${activity.id}">
+                  ${actionIcon()}
+                </button>
+                <button class="btn-icon" title="Edit" data-edit-activity="${activity.id}">
+                  ${editIcon()}
+                </button>
+                <button class="btn-icon danger" title="Delete" data-del-activity="${activity.id}">
+                  ${deleteIcon()}
+                </button>
+              </div>
+            </td>
+          `;
+
+          tbody.appendChild(tr);
+
+          if (isOpen) {
+            subs.forEach((sub) => {
+              const subTr = document.createElement('tr');
+              subTr.className = 'sub-row';
+              subTr.innerHTML = `
+                <td>
+                  <div class="sub-name-cell">
+                    <input type="checkbox" class="check" data-toggle-done="${activity.id}:${sub.id}" ${sub.done ? 'checked' : ''} />
+                    <span class="${sub.done ? 'sub-done' : ''}">${esc(sub.name)}</span>
+                  </div>
+                </td>
+                <td></td>
+                <td>${avatarHtml(sub.owner)}</td>
+                <td>${priorityHtml(sub.priority)}</td>
+                <td class="cell-date">${dueDateBadge(sub.due, sub.done, sub.completedAt)}</td>
+                <td class="col-actions">
+                  <div class="row-actions">
+                    <button class="btn-icon" title="Follow-up history" data-action-sub="${activity.id}:${sub.id}">
+                      ${actionIcon()}
+                    </button>
+                    <button class="btn-icon" title="Edit" data-edit-sub="${activity.id}:${sub.id}">
+                      ${editIcon()}
+                    </button>
+                    <button class="btn-icon danger" title="Delete" data-del-sub="${activity.id}:${sub.id}">
+                      ${deleteIcon()}
+                    </button>
+                  </div>
+                </td>
+              `;
+
+              tbody.appendChild(subTr);
+            });
+
+            const addTr = document.createElement('tr');
+            addTr.className = 'add-sub-row';
+            addTr.innerHTML = `
+              <td colspan="6">
+                <button class="btn" data-add-sub="${activity.id}">+ Add subactivity</button>
+              </td>
+            `;
+
+            tbody.appendChild(addTr);
+          }
+        });
+      }
+
+      function esc(s) {
+        return String(s ?? '').replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;',
+            })[c],
+        );
+      }
+
+      function todayIso() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function isActivityDone(activity) {
+        return (
+          activity.subactivities.length > 0 &&
+          activity.subactivities.every((s) => s.done)
+        );
+      }
+
+      function getActivityCompletedAt(activity) {
+        if (!isActivityDone(activity)) return '';
+
+        const dates = activity.subactivities
+          .map((s) => s.completedAt)
+          .filter(Boolean)
+          .sort();
+
+        return dates[dates.length - 1] || '';
+      }
+
+      function actionIcon() {
+        return `
+          <svg viewBox="0 0 640 640" fill="currentColor">
+            <path d="M96 128C96 92.7 124.7 64 160 64C195.3 64 224 92.7 224 128C224 163.3 195.3 192 160 192C124.7 192 96 163.3 96 128zM64 288C64 252.7 92.7 224 128 224L192 224C195.2 224 198.4 224.2 201.5 224.7L157.1 269.1C129 297.2 129 342.8 157.1 370.9L213.1 426.9C216.5 430.3 220.1 433.3 224 435.9L224 528C224 554.5 202.5 576 176 576L144 576C117.5 576 96 554.5 96 528L96 407.4C76.9 396.4 64 375.7 64 352L64 288zM416 128C416 92.7 444.7 64 480 64C515.3 64 544 92.7 544 128C544 163.3 515.3 192 480 192C444.7 192 416 163.3 416 128zM482.9 269.1L438.5 224.7C441.6 224.2 444.8 224 448 224L512 224C547.3 224 576 252.7 576 288L576 352C576 375.7 563.1 396.4 544 407.4L544 528C544 554.5 522.5 576 496 576L464 576C437.5 576 416 554.5 416 528L416 435.9C419.9 433.3 423.5 430.3 426.9 426.9L482.9 370.9C511 342.8 511 297.2 482.9 269.1zM366.8 241.8C375.8 238.1 386.1 240.1 393 247L449 303C458.4 312.4 458.4 327.6 449 336.9L393 392.9C386.1 399.8 375.8 401.8 366.8 398.1C357.8 394.4 352 385.7 352 376L352 352L288 352L288 376C288 385.7 282.2 394.5 273.2 398.2C264.2 401.9 253.9 399.9 247 393L191 337C181.6 327.6 181.6 312.4 191 303.1L247 247.1C253.9 240.2 264.2 238.2 273.2 241.9C282.2 245.6 288 254.3 288 264L288 288L352 288L352 264C352 254.3 357.8 245.5 366.8 241.8z"/>
+          </svg>
+        `;
+      }
+
+      function editIcon() {
+        return `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 20h9" stroke-width="2" stroke-linecap="round" />
+            <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-width="2" stroke-linejoin="round" />
+          </svg>
+        `;
+      }
+
+      function deleteIcon() {
+        return `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 6h18" stroke-width="2" stroke-linecap="round" />
+            <path d="M8 6V4h8v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M19 6l-1 14H6L5 6" stroke-width="2" stroke-linejoin="round" />
+            <path d="M10 11v6M14 11v6" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        `;
+      }
+
+      const monthNames = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+
+      function formatDate(iso) {
+        if (!iso) return '';
+        const [y, m, d] = iso.split('-').map(Number);
+        if (!y || !m || !d) return '';
+        return `${d} ${monthNames[m - 1]} ${y}`;
+      }
+
+      function dueDateBadge(date, done = false, completedAt = '') {
+        if (!date) return '';
+
+        let cls = 'ontime';
+        let status = 'On time';
+
+        if (done) {
+          if (!completedAt) {
+            cls = 'done';
+            status = 'Completed';
+          } else if (completedAt > date) {
+            cls = 'done-late';
+            status = `Completed late on ${formatDate(completedAt)}`;
+          } else if (completedAt < date) {
+            cls = 'done';
+            status = `Completed early on ${formatDate(completedAt)}`;
+          } else {
+            cls = 'done';
+            status = `Completed on time on ${formatDate(completedAt)}`;
+          }
+
+          return `
+            <span class="date-badge ${cls}" data-status="${esc(status)}">
+              ${formatDate(date)}
+            </span>
+          `;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const due = new Date(date + 'T00:00:00');
+        const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+          cls = 'delay';
+          status = `Delayed by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''}`;
+        } else if (diffDays <= 3) {
+          cls = 'close';
+          status =
+            diffDays === 0
+              ? 'Due today'
+              : `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+        } else {
+          status = `Due in ${diffDays} days`;
+        }
+
+        return `
+          <span class="date-badge ${cls}" data-status="${esc(status)}">
+            ${formatDate(date)}
+          </span>
+        `;
+      }
+
+      function initials(name) {
+        if (!name) return '';
+        const parts = name.trim().split(/\s+/).slice(0, 2);
+        return parts
+          .map((p) => p[0])
+          .join('')
+          .toUpperCase();
+      }
+
+      const avatarPalette = [
+        '#6366f1',
+        '#a855f7',
+        '#ec4899',
+        '#ef4444',
+        '#f97316',
+        '#eab308',
+        '#22c55e',
+        '#14b8a6',
+        '#0ea5e9',
+        '#8b5cf6',
+      ];
+
+      function avatarColor(name) {
+        if (!name) return 'var(--border)';
+        let h = 0;
+        for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+        return avatarPalette[h % avatarPalette.length];
+      }
+
+      function avatarHtml(name) {
+        if (!name) return `<span class="avatar empty">–</span>`;
+        return `<span class="avatar" data-name="${esc(name)}" style="background:${avatarColor(name)}">${esc(initials(name))}</span>`;
+      }
+
+      const priorityLabel = { high: 'High', middle: 'Middle', low: 'Low' };
+
+      function priorityHtml(p) {
+        if (!p) return '';
+        return `<span class="priority ${p}">${priorityLabel[p] || p}</span>`;
+      }
+
+      function completionPercent(activity) {
+        const total = activity.subactivities.length;
+        if (total === 0) return 0;
+
+        const done = activity.subactivities.filter((s) => s.done).length;
+        return Math.round((done / total) * 100);
+      }
+
+      document.getElementById('f-search').addEventListener('input', (e) => {
+        filters.search = e.target.value.trim();
+        render();
+      });
+
+      document.getElementById('f-project').addEventListener('change', (e) => {
+        filters.project = e.target.value;
+        render();
+      });
+
+      document.getElementById('f-priority').addEventListener('change', (e) => {
+        filters.priority = e.target.value;
+        render();
+      });
+
+      document.getElementById('f-start').addEventListener('change', (e) => {
+        filters.start = e.target.value;
+        render();
+      });
+
+      document.getElementById('f-end').addEventListener('change', (e) => {
+        filters.end = e.target.value;
+        render();
+      });
+
+      document.getElementById('f-hide-done').addEventListener('change', (e) => {
+        filters.hideDone = e.target.checked;
+        render();
+      });
+
+      document.getElementById('clear-filters').addEventListener('click', () => {
+        filters.search = '';
+        filters.project = '';
+        filters.priority = '';
+        filters.start = '';
+        filters.end = '';
+        filters.hideDone = false;
+
+        document.getElementById('f-search').value = '';
+        document.getElementById('f-project').value = '';
+        document.getElementById('f-priority').value = '';
+        document.getElementById('f-start').value = '';
+        document.getElementById('f-end').value = '';
+        document.getElementById('f-hide-done').checked = false;
+
+        render();
+      });
+
+      tbody.addEventListener('change', (e) => {
+        const cb = e.target.closest('[data-toggle-done]');
+        if (!cb) return;
+
+        const [aid, sid] = cb.dataset.toggleDone.split(':').map(Number);
+        const activity = data.find((a) => a.id === aid);
+        const sub = activity.subactivities.find((s) => s.id === sid);
+
+        sub.done = cb.checked;
+        sub.completedAt = cb.checked ? todayIso() : '';
+
+        render();
+      });
+
+      tbody.addEventListener('click', (e) => {
+        const t = e.target.closest(
+          '[data-toggle],[data-edit-activity],[data-del-activity],[data-edit-sub],[data-del-sub],[data-add-sub]',
+        );
+
+        if (!t) return;
+
+        if (t.dataset.toggle) {
+          const id = +t.dataset.toggle;
+          openSet.has(id) ? openSet.delete(id) : openSet.add(id);
+          render();
+        } else if (t.dataset.editActivity) {
+          openModal('activity', +t.dataset.editActivity);
+        } else if (t.dataset.delActivity) {
+          const id = +t.dataset.delActivity;
+
+          if (confirm('Delete this activity and all its subactivities?')) {
+            data = data.filter((a) => a.id !== id);
+            openSet.delete(id);
+            render();
+          }
+        } else if (t.dataset.editSub) {
+          const [aid, sid] = t.dataset.editSub.split(':').map(Number);
+          openModal('sub', sid, aid);
+        } else if (t.dataset.delSub) {
+          const [aid, sid] = t.dataset.delSub.split(':').map(Number);
+          const a = data.find((x) => x.id === aid);
+          a.subactivities = a.subactivities.filter((s) => s.id !== sid);
+          render();
+        } else if (t.dataset.addSub) {
+          openModal('sub', null, +t.dataset.addSub);
+        }
+      });
+
+      document
+        .getElementById('add-activity-btn')
+        .addEventListener('click', () => openModal('activity'));
+
+      let modalContext = null;
+      const modalEl = document.getElementById('modal');
+
+      function openModal(type, id = null, parentId = null) {
+        modalContext = { type, id, parentId };
+
+        let item = null;
+
+        if (type === 'activity' && id) {
+          item = data.find((a) => a.id === id);
+        }
+
+        if (type === 'sub' && id) {
+          item = data
+            .find((a) => a.id === parentId)
+            .subactivities.find((s) => s.id === id);
+        }
+
+        document.getElementById('modal-title').textContent =
+          (id ? 'Edit ' : 'Add ') +
+          (type === 'activity' ? 'activity' : 'subactivity');
+
+        document.getElementById('m-name').value = item?.name || '';
+        document.getElementById('m-project').value = item?.project || '';
+        document.getElementById('m-owner').value = item?.owner || '';
+        document.getElementById('m-priority').value = item?.priority || '';
+        document.getElementById('m-due').value = item?.due || '';
+
+        document.getElementById('m-project-wrap').style.display =
+          type === 'activity' ? 'block' : 'none';
+
+        modalEl.classList.add('open');
+        document.getElementById('m-name').focus();
+      }
+
+      function closeModal() {
+        modalEl.classList.remove('open');
+        modalContext = null;
+      }
+
+      function saveModal() {
+        const { type, id, parentId } = modalContext;
+        const name = document.getElementById('m-name').value.trim();
+        const project = document.getElementById('m-project').value.trim();
+        const owner = document.getElementById('m-owner').value.trim();
+        const priority = document.getElementById('m-priority').value;
+        const due = document.getElementById('m-due').value;
+
+        if (!name) {
+          alert('Name is required');
+          return;
+        }
+
+        if (type === 'activity') {
+          if (id) {
+            Object.assign(
+              data.find((x) => x.id === id),
+              {
+                name,
+                project,
+                owner,
+                priority,
+                due,
+              },
+            );
+          } else {
+            data.push({
+              id: newId(),
+              name,
+              project,
+              owner,
+              priority,
+              due,
+              subactivities: [],
+            });
+          }
+        } else {
+          const parent = data.find((a) => a.id === parentId);
+
+          if (id) {
+            Object.assign(
+              parent.subactivities.find((x) => x.id === id),
+              {
+                name,
+                owner,
+                priority,
+                due,
+              },
+            );
+          } else {
+            parent.subactivities.push({
+              id: newId(),
+              name,
+              owner,
+              priority,
+              due,
+              done: false,
+              completedAt: '',
+            });
+
+            openSet.add(parentId);
+          }
+        }
+
+        closeModal();
+        render();
+      }
+
+      document.querySelectorAll('thead th[data-sort]').forEach((th) => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+
+          if (sortState.key === key) {
+            sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortState.key = key;
+            sortState.dir = 'asc';
+          }
+
+          render();
+        });
+      });
+
+      document
+        .getElementById('modal-cancel')
+        .addEventListener('click', closeModal);
+
+      document
+        .getElementById('modal-save')
+        .addEventListener('click', saveModal);
+
+      modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+
+        if (e.key === 'Enter' && modalContext) {
+          saveModal();
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>

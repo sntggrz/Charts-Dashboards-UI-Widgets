@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time Picker</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #f5f5f7;
+        --surface: #ffffff;
+        --text: #1d1d1f;
+        --text-muted: #86868b;
+        --border: #e5e5ea;
+        --accent: #cb312a;
+        --accent-soft: #cdcdcd;
+        --shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        background: transparent;
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 16px;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .card {
+        background: transparent;
+        padding: 0;
+        width: 100%;
+        max-width: 240px;
+      }
+
+      h1 {
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 12px;
+      }
+
+      /* Digital display — large, tappable, keyboard-editable */
+      .display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        margin-bottom: 14px;
+      }
+
+      .time-input {
+        font-family: inherit;
+        font-size: 32px;
+        font-weight: 300;
+        font-variant-numeric: tabular-nums;
+        color: var(--text);
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        width: 56px;
+        text-align: center;
+        padding: 4px 2px;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+        outline: none;
+        -moz-appearance: textfield;
+      }
+
+      .time-input::-webkit-outer-spin-button,
+      .time-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .time-input:hover {
+        background: var(--accent-soft);
+      }
+      .time-input:focus,
+      .time-input.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .colon {
+        font-size: 32px;
+        font-weight: 300;
+        color: var(--text-muted);
+        user-select: none;
+        line-height: 1;
+        margin-bottom: 3px;
+      }
+
+      /* AM/PM toggle */
+      .period {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        margin-left: 4px;
+      }
+
+      .period button {
+        font-family: inherit;
+        font-size: 10px;
+        font-weight: 600;
+        background: transparent;
+        color: var(--text-muted);
+        border: none;
+        padding: 3px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .period button:hover {
+        color: var(--text);
+      }
+      .period button.active {
+        background: var(--accent);
+        color: white;
+      }
+
+      /* Clock face */
+      .clock-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 14px;
+      }
+
+      .clock {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        background: var(--bg);
+        border-radius: 50%;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .clock-number {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text);
+        cursor: pointer;
+        transform: translate(-50%, -50%);
+        transition:
+          background 0.12s ease,
+          color 0.12s ease,
+          font-size 0.12s ease;
+        z-index: 2;
+      }
+
+      .clock-number:hover {
+        background: var(--accent-soft);
+      }
+
+      .clock-number.minor {
+        font-size: 10px;
+        color: var(--text-muted);
+      }
+
+      .clock-number.selected {
+        background: var(--accent);
+        color: white;
+      }
+
+      .hand {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 2px;
+        background: var(--accent);
+        transform-origin: bottom center;
+        transition:
+          transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
+          height 0.18s ease;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .center-dot {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 7px;
+        height: 7px;
+        background: var(--accent);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+        pointer-events: none;
+      }
+
+      .mode-hint {
+        text-align: center;
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        height: 14px;
+      }
+
+      .footer {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+      }
+
+      .btn {
+        flex: 1;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 8px;
+        border-radius: 7px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+      }
+      .btn-secondary:hover {
+        color: var(--text);
+        border-color: var(--text-muted);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+      .btn-primary:hover {
+        filter: brightness(1.05);
+      }
+      .btn-primary:active {
+        transform: scale(0.98);
+      }
+
+      /* Selected time confirmation */
+      .toast {
+        position: fixed;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--text);
+        color: var(--surface);
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card" role="group" aria-label="Time picker">
+      <h1>Elige el tiempo</h1>
+
+      <div class="display">
+        <input
+          type="number"
+          class="time-input active"
+          id="hourInput"
+          value="10"
+          min="1"
+          max="12"
+          aria-label="Hour"
+        />
+        <span class="colon">:</span>
+        <input
+          type="number"
+          class="time-input"
+          id="minuteInput"
+          value="00"
+          min="0"
+          max="59"
+          aria-label="Minute"
+        />
+        <div class="period" role="radiogroup" aria-label="AM or PM">
+          <button id="amBtn" class="active" aria-label="AM">AM</button>
+          <button id="pmBtn" aria-label="PM">PM</button>
+        </div>
+      </div>
+
+      <div class="mode-hint" id="modeHint">Tap a number or drag the hand</div>
+
+      <div class="clock-wrap">
+        <div
+          class="clock"
+          id="clock"
+          role="application"
+          aria-label="Clock face"
+        >
+          <div class="hand" id="hand"></div>
+          <div class="center-dot"></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="btn btn-secondary" id="nowBtn">Ahora</button>
+        <button class="btn btn-primary" id="setBtn">Establecer tiempo</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      (function () {
+        const clock = document.getElementById('clock');
+        const hand = document.getElementById('hand');
+        const hourInput = document.getElementById('hourInput');
+        const minuteInput = document.getElementById('minuteInput');
+        const amBtn = document.getElementById('amBtn');
+        const pmBtn = document.getElementById('pmBtn');
+        const modeHint = document.getElementById('modeHint');
+        const nowBtn = document.getElementById('nowBtn');
+        const setBtn = document.getElementById('setBtn');
+        const toast = document.getElementById('toast');
+
+        const state = {
+          hour: 10, // 1..12
+          minute: 0, // 0..59
+          period: 'AM', // AM | PM
+          mode: 'hour', // 'hour' | 'minute'
+        };
+
+        const CLOCK_SIZE = 160;
+        const CENTER = CLOCK_SIZE / 2;
+        const HOUR_RADIUS = 60;
+        const MINUTE_RADIUS = 66;
+
+        // Build clock numbers
+        function buildNumbers() {
+          // Remove old
+          clock.querySelectorAll('.clock-number').forEach((n) => n.remove());
+
+          if (state.mode === 'hour') {
+            for (let i = 1; i <= 12; i++) {
+              const angle = (i * 30 - 90) * (Math.PI / 180);
+              const x = CENTER + Math.cos(angle) * HOUR_RADIUS;
+              const y = CENTER + Math.sin(angle) * HOUR_RADIUS;
+              addNumber(i, x, y, false, () => {
+                state.hour = i;
+                syncFromState();
+                // Auto-advance to minutes after picking hour
+                setTimeout(() => setMode('minute'), 220);
+              });
+            }
+          } else {
+            for (let i = 0; i < 60; i += 5) {
+              const angle = (i * 6 - 90) * (Math.PI / 180);
+              const x = CENTER + Math.cos(angle) * MINUTE_RADIUS;
+              const y = CENTER + Math.sin(angle) * MINUTE_RADIUS;
+              const label = i.toString().padStart(2, '0');
+              addNumber(label, x, y, false, () => {
+                state.minute = i;
+                syncFromState();
+              });
+            }
+          }
+          updateSelection();
+        }
+
+        function addNumber(label, x, y, minor, onClick) {
+          const el = document.createElement('div');
+          el.className = 'clock-number' + (minor ? ' minor' : '');
+          el.textContent = label;
+          el.style.left = x + 'px';
+          el.style.top = y + 'px';
+          el.dataset.value =
+            typeof label === 'number' ? label : parseInt(label, 10);
+          el.addEventListener('click', onClick);
+          clock.appendChild(el);
+        }
+
+        function updateSelection() {
+          const value = state.mode === 'hour' ? state.hour : state.minute;
+          clock.querySelectorAll('.clock-number').forEach((el) => {
+            const v = parseInt(el.dataset.value, 10);
+            el.classList.toggle('selected', v === value);
+          });
+          updateHand();
+        }
+
+        function updateHand() {
+          let angle, length;
+          if (state.mode === 'hour') {
+            angle = state.hour * 30; // 0 at top, clockwise
+            length = HOUR_RADIUS;
+          } else {
+            angle = state.minute * 6;
+            length = MINUTE_RADIUS;
+          }
+          hand.style.height = length + 'px';
+          hand.style.transform = `translateX(-50%) translateY(-100%) rotate(${angle}deg)`;
+        }
+
+        function setMode(mode) {
+          state.mode = mode;
+          hourInput.classList.toggle('active', mode === 'hour');
+          minuteInput.classList.toggle('active', mode === 'minute');
+          modeHint.textContent =
+            mode === 'hour'
+              ? 'Seleciona hora — luego minutos'
+              : 'Arrastra para cualquier min';
+          buildNumbers();
+        }
+
+        function syncFromState() {
+          hourInput.value = state.hour;
+          minuteInput.value = state.minute.toString().padStart(2, '0');
+          amBtn.classList.toggle('active', state.period === 'AM');
+          pmBtn.classList.toggle('active', state.period === 'PM');
+          updateSelection();
+        }
+
+        // Drag-to-set on clock
+        let dragging = false;
+
+        function pointToValue(clientX, clientY) {
+          const rect = clock.getBoundingClientRect();
+          const x = clientX - rect.left - CENTER;
+          const y = clientY - rect.top - CENTER;
+          let angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
+          if (angle < 0) angle += 360;
+
+          if (state.mode === 'hour') {
+            let h = Math.round(angle / 30);
+            if (h === 0) h = 12;
+            if (h > 12) h = 12;
+            return h;
+          } else {
+            let m = Math.round(angle / 6);
+            if (m >= 60) m = 0;
+            return m;
+          }
+        }
+
+        function handlePointer(e) {
+          const point = e.touches ? e.touches[0] : e;
+          const value = pointToValue(point.clientX, point.clientY);
+          if (state.mode === 'hour') state.hour = value;
+          else state.minute = value;
+          syncFromState();
+        }
+
+        clock.addEventListener('mousedown', (e) => {
+          // Only drag when starting in the dial area, not on a number (let click handle that)
+          if (e.target.classList.contains('clock-number')) return;
+          dragging = true;
+          handlePointer(e);
+          e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+          if (dragging) handlePointer(e);
+        });
+        document.addEventListener('mouseup', () => {
+          dragging = false;
+        });
+
+        clock.addEventListener(
+          'touchstart',
+          (e) => {
+            if (e.target.classList.contains('clock-number')) return;
+            dragging = true;
+            handlePointer(e);
+            e.preventDefault();
+          },
+          { passive: false },
+        );
+        clock.addEventListener(
+          'touchmove',
+          (e) => {
+            if (dragging) {
+              handlePointer(e);
+              e.preventDefault();
+            }
+          },
+          { passive: false },
+        );
+        clock.addEventListener('touchend', () => {
+          dragging = false;
+        });
+
+        // Digital input handling
+        hourInput.addEventListener('focus', () => setMode('hour'));
+        minuteInput.addEventListener('focus', () => setMode('minute'));
+
+        hourInput.addEventListener('input', () => {
+          let v = parseInt(hourInput.value, 10);
+          if (isNaN(v)) return;
+          v = Math.max(1, Math.min(12, v));
+          state.hour = v;
+          updateSelection();
+        });
+
+        hourInput.addEventListener('blur', () => {
+          syncFromState();
+        });
+
+        minuteInput.addEventListener('input', () => {
+          let v = parseInt(minuteInput.value, 10);
+          if (isNaN(v)) return;
+          v = Math.max(0, Math.min(59, v));
+          state.minute = v;
+          updateSelection();
+        });
+
+        minuteInput.addEventListener('blur', () => {
+          syncFromState();
+        });
+
+        // Keyboard arrows for fine adjustment
+        hourInput.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            state.hour = state.hour === 12 ? 1 : state.hour + 1;
+            syncFromState();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            state.hour = state.hour === 1 ? 12 : state.hour - 1;
+            syncFromState();
+          } else if (e.key === 'Tab' && !e.shiftKey) {
+            // Tab into minutes naturally switches mode via focus handler
+          }
+        });
+
+        minuteInput.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            state.minute = (state.minute + 1) % 60;
+            syncFromState();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            state.minute = (state.minute + 59) % 60;
+            syncFromState();
+          }
+        });
+
+        // AM/PM toggle
+        amBtn.addEventListener('click', () => {
+          state.period = 'AM';
+          syncFromState();
+        });
+        pmBtn.addEventListener('click', () => {
+          state.period = 'PM';
+          syncFromState();
+        });
+
+        // Now button — set to current time
+        nowBtn.addEventListener('click', () => {
+          const d = new Date();
+          let h = d.getHours();
+          state.period = h >= 12 ? 'PM' : 'AM';
+          h = h % 12;
+          if (h === 0) h = 12;
+          state.hour = h;
+          state.minute = d.getMinutes();
+          syncFromState();
+          saveTime();
+          showToast(`Establecido a la hora actual: ${formatTime()}`);
+        });
+
+        // Set button — confirm
+        setBtn.addEventListener('click', () => {
+          showToast(`Tiempo establecido: ${formatTime()}`);
+          saveTime();
+        });
+
+        function formatTime() {
+          return `${state.hour}:${state.minute.toString().padStart(2, '0')} ${state.period}`;
+        }
+
+        let toastTimer;
+        function showToast(msg) {
+          toast.textContent = msg;
+          toast.classList.add('show');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+        function emitAction(action, payload) {
+          // Neutral hook: any host page can listen for 'widget:action'.
+          const detail = { action, payload };
+          window.dispatchEvent(new CustomEvent('widget:action', { detail }));
+          if (window.parent !== window) {
+            window.parent.postMessage({ type: 'widget:action', ...detail }, '*');
+          }
+          console.log('[widget:action]', action, payload);
+        }
+
+        function saveTime() {
+          const payload = JSON.stringify({
+            hour: state.hour,
+            minute: state.minute.toString().padStart(2, '0'),
+            period: state.period,
+            time: formatTime(),
+          });
+
+          emitAction('save-time', JSON.parse(payload));
+        }
+
+        // Init
+        setMode('hour');
+        syncFromState();
+      })();
+    </script>
+  </body>
+</html>

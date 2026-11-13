@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <title>Sprint Burndown</title>
+    <meta charset="utf-8" />
+  </head>
+  <body style="height: 100%; margin: 0">
+    <div id="container" style="height: 100%"></div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+
+    <script type="text/javascript">
+      var dom = document.getElementById('container');
+      var myChart = echarts.init(dom, null, {
+        renderer: 'canvas',
+        useDirtyRect: false,
+      });
+
+      var option;
+
+      var weeks = [
+        'CANT',
+        'S1',
+        'S2',
+        'S3',
+        'S4',
+        'S5',
+        'S6',
+        'S7',
+        'S8',
+        'S9',
+      ];
+
+      var saldoPlan = [300, 250, 210, 150, 50, 30, 0, 0, 0, 0];
+      var saldoProyectado = [300, 260, 220, 160, 60, 40, 10, 10];
+      var saldoEjecutado = [
+        300,
+        250,
+        200,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ];
+
+      option = {
+        tooltip: {
+          trigger: 'axis',
+          textStyle: {
+            fontSize: 10,
+          },
+        },
+        legend: {
+          data: ['PLAN', 'PROYECTADO', 'EJECUTADO'],
+          top: '2%',
+          textStyle: {
+            fontSize: 10,
+          },
+        },
+        grid: {
+          top: '12%',
+          left: '2%',
+          right: '2%',
+          bottom: '5%',
+          containLabel: true,
+        },
+        xAxis: {
+          type: 'category',
+          data: weeks,
+          axisTick: {
+            show: false,
+          },
+          axisLabel: {
+            fontSize: 9,
+          },
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: {
+            fontSize: 9,
+          },
+        },
+        series: [
+          {
+            name: 'PLAN',
+            type: 'line',
+            data: saldoPlan,
+            color: '#4A90E2',
+            symbol: 'circle',
+            symbolSize: 8,
+            showSymbol: false,
+            lineStyle: {
+              width: 2,
+            },
+            emphasis: {
+              showSymbol: true,
+            },
+          },
+          {
+            name: 'PROYECTADO',
+            type: 'line',
+            data: saldoProyectado,
+            color: '#D87C7C',
+            symbol: 'circle',
+            symbolSize: 8,
+            showSymbol: false,
+            lineStyle: {
+              width: 2,
+              type: 'dashed',
+            },
+            emphasis: {
+              showSymbol: true,
+            },
+          },
+          {
+            name: 'EJECUTADO',
+            type: 'line',
+            data: saldoEjecutado,
+            color: '#7FB77E',
+            symbol: 'circle',
+            symbolSize: 8,
+            showSymbol: false,
+            lineStyle: {
+              width: 2,
+            },
+            emphasis: {
+              showSymbol: true,
+            },
+          },
+        ],
+      };
+
+      if (option && typeof option === 'object') {
+        myChart.setOption(option);
+      }
+
+      window.addEventListener('resize', myChart.resize);
+    </script>
+  </body>
+</html>

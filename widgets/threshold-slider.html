@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <title>Threshold Slider</title>
+    <meta charset="utf-8" />
+
+    <style>
+      /* Reset for embedding */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial,
+          sans-serif;
+        font-size: 13px;
+        color: #222;
+      }
+
+      .wrap {
+        padding: 8px;
+      }
+
+      .card {
+        position: relative;
+        background: #fff;
+        border-radius: 14px;
+        padding: 12px 14px 14px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+      }
+
+      /* 🔄 Refresh */
+      .refresh-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background: #f0f0f0;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      h2 {
+        margin: 0 0 4px 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .help {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 10px;
+        line-height: 1.3;
+      }
+
+      .section {
+        display: grid;
+        gap: 10px;
+      }
+
+      .label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .red {
+        background: #e53935;
+      }
+      .yellow {
+        background: #fdd835;
+      }
+      .green {
+        background: #43a047;
+      }
+
+      .label strong {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .label span {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 64px;
+        gap: 8px;
+        align-items: center;
+      }
+
+      input[type='range'] {
+        width: 100%;
+        height: 18px;
+        margin: 0;
+      }
+
+      .num {
+        width: 64px;
+        height: 28px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        text-align: center;
+        font-size: 13px;
+        background: #fff;
+      }
+
+      .preview {
+        margin-top: 10px;
+        display: grid;
+        gap: 4px;
+      }
+
+      .bar {
+        height: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: var(--r) var(--y) var(--g);
+        background: #eee;
+      }
+
+      .seg.red {
+        background: #e53935;
+      }
+      .seg.yellow {
+        background: #fdd835;
+      }
+      .seg.green {
+        background: #43a047;
+      }
+
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #777;
+      }
+
+      .summary {
+        margin-top: 4px;
+        padding: 6px 8px;
+        font-size: 12px;
+        background: #fafafa;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        line-height: 1.3;
+      }
+      .num[readonly] {
+        -webkit-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
+
+        text-align: center;
+        height: 28px;
+        padding: 0;
+        line-height: 28px;
+
+        background: #f5f5f5;
+        color: #666;
+        cursor: default;
+      }
+
+      .num[readonly]::-webkit-outer-spin-button,
+      .num[readonly]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <button class="refresh-btn" id="refreshBtn">↻</button>
+
+        <h2>Configuración de semáforo de resultados</h2>
+        <div class="help">
+          Define los rangos de color usados en los reportes.
+        </div>
+
+        <div class="section">
+          <div>
+            <div class="label">
+              <span class="dot red"></span>
+              <strong>Bajo desempeño</strong>
+              <span id="redHint">hasta 50%</span>
+            </div>
+            <div class="row">
+              <input id="redRange" type="range" min="0" max="99" value="50" />
+              <input
+                id="redNum"
+                class="num"
+                type="number"
+                min="0"
+                max="99"
+                value="50"
+                readonly
+              />
+            </div>
+          </div>
+
+          <div>
+            <div class="label">
+              <span class="dot green"></span>
+              <strong>Buen desempeño</strong>
+              <span id="greenHint">desde 90%</span>
+            </div>
+            <div class="row">
+              <input
+                id="greenRange"
+                type="range"
+                min="1"
+                max="100"
+                value="90"
+              />
+              <input
+                id="greenNum"
+                class="num"
+                type="number"
+                min="1"
+                max="100"
+                value="90"
+                readonly
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="preview">
+          <div class="bar" id="bar">
+            <div class="seg red"></div>
+            <div class="seg yellow"></div>
+            <div class="seg green"></div>
+          </div>
+          <div class="ticks"><span>0%</span><span>100%</span></div>
+          <div class="summary" id="summary"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const redRange = document.getElementById('redRange');
+      const redNum = document.getElementById('redNum');
+      const greenRange = document.getElementById('greenRange');
+      const greenNum = document.getElementById('greenNum');
+      const bar = document.getElementById('bar');
+      const summary = document.getElementById('summary');
+      const redHint = document.getElementById('redHint');
+      const greenHint = document.getElementById('greenHint');
+
+      const DEFAULTS = { red: 50, green: 90 };
+
+      function emitAction(action, payload) {
+        // Neutral hook: any host page can listen for 'widget:action'.
+        const detail = { action, payload };
+        window.dispatchEvent(new CustomEvent('widget:action', { detail }));
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'widget:action', ...detail }, '*');
+        }
+        console.log('[widget:action]', action, payload);
+      }
+
+      function saveConfig(r, g) {
+        emitAction('save-thresholds', { red: r, green: g });
+      }
+
+      function sync(save = true) {
+        let r = Math.min(+redRange.value, +greenRange.value - 1);
+        let g = Math.max(+greenRange.value, r + 1);
+
+        redRange.value = redNum.value = r;
+        greenRange.value = greenNum.value = g;
+
+        redHint.textContent = `hasta ${r}%`;
+        greenHint.textContent = `desde ${g}%`;
+
+        bar.style.setProperty('--r', `${r}%`);
+        bar.style.setProperty('--y', `${g - r}%`);
+        bar.style.setProperty('--g', `${100 - g}%`);
+
+        summary.innerHTML = `
+      🔴 Rojo <strong>0% – ${r}%</strong><br>
+      🟡 Amarillo <strong>${r}% – ${g}%</strong><br>
+      🟢 Verde <strong>${g}% – 100%</strong>
+    `;
+
+        if (save) saveConfig(r, g);
+      }
+
+      [redRange, redNum, greenRange, greenNum].forEach((el) =>
+        el.addEventListener('input', () => sync(true)),
+      );
+
+      document.getElementById('refreshBtn').onclick = () => {
+        redRange.value = redNum.value = DEFAULTS.red;
+        greenRange.value = greenNum.value = DEFAULTS.green;
+        sync(true);
+      };
+
+      sync(false);
+    </script>
+  </body>
+</html>

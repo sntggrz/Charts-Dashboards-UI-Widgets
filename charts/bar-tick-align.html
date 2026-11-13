@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <title>Bar Chart</title>
+    <meta charset="utf-8" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+  </head>
+  <body style="height: 100%; margin: 0">
+    <div id="container" style="height: 100%"></div>
+
+    <script type="text/javascript">
+      var dom = document.getElementById("container");
+      var myChart = echarts.init(dom, null, {
+        renderer: "canvas",
+        useDirtyRect: false,
+      });
+      var app = {};
+
+      var option;
+
+      var currencyData = [5100, 2500, 7800, 550, 10];
+
+      option = {
+        title: {
+          text: "Top 5 vendedores",
+          left: "center",
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+          },
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "none",
+          },
+          formatter: function (params) {
+            const dataIndex = params[0].dataIndex;
+            const toneladas = params[0].value.toLocaleString();
+            const currency = currencyData[dataIndex].toLocaleString();
+            return `
+              <strong>${params[0].name}</strong><br />
+              Toneladas: ${toneladas}<br />
+              Currency: $${currency}
+            `;
+          },
+        },
+        grid: {
+          left: "2%",
+          right: "4%",
+          bottom: "2%",
+          top: "5%",
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            type: "value",
+            axisLabel: {
+              fontSize: 12,
+              interval: 0,
+            },
+          },
+        ],
+        yAxis: [
+          {
+            type: "category",
+            data: [
+              "MARÍA FERNANDA DE LA PEÑA VILLASEÑOR",
+              "LUIS TORRES",
+              "ANA LÓPEZ",
+              "DIEGO RUIZ",
+              "SOFÍA MÉNDEZ",
+            ],
+            axisTick: {
+              show: false,
+            },
+            axisLabel: {
+              formatter: function (value) {
+                const maxLength = 15;
+                return value.length > maxLength
+                  ? value.slice(0, maxLength) + "..."
+                  : value;
+              },
+              fontSize: 12,
+            },
+            axisLine: {
+              lineStyle: {
+                color: "808080",
+              },
+            },
+          },
+        ],
+        series: [
+          {
+            name: "Toneladas",
+            type: "bar",
+            barWidth: "50%",
+            data: [
+              {
+                value: 400,
+                itemStyle: {
+                  color: {
+                    type: "linear",
+                    x: 0,
+                    y: 0,
+                    x2: 1,
+                    y2: 0,
+                    colorStops: [
+                      { offset: 0, color: "#A83232" },
+                      { offset: 1, color: "#FF0800" },
+                    ],
+                  },
+                },
+              },
+              {
+                value: 520,
+                itemStyle: {
+                  color: {
+                    type: "linear",
+                    x: 0,
+                    y: 0,
+                    x2: 1,
+                    y2: 0,
+                    colorStops: [
+                      { offset: 0, color: "#0A6522" },
+                      { offset: 1, color: "#2E8B57" },
+                    ],
+                  },
+                },
+              },
+              {
+                value: 2000,
+                itemStyle: {
+                  color: {
+                    type: "linear",
+                    x: 0,
+                    y: 0,
+                    x2: 1,
+                    y2: 0,
+                    colorStops: [
+                      { offset: 0, color: "#008BA8" },
+                      { offset: 1, color: "#00A7FF" },
+                    ],
+                  },
+                },
+              },
+              {
+                value: 3340,
+                itemStyle: {
+                  color: {
+                    type: "linear",
+                    x: 0,
+                    y: 0,
+                    x2: 1,
+                    y2: 0,
+                    colorStops: [
+                      { offset: 0, color: "#F6A200" },
+                      { offset: 1, color: "#EDC901" },
+                    ],
+                  },
+                },
+              },
+              {
+                value: 3900,
+                itemStyle: {
+                  color: {
+                    type: "linear",
+                    x: 0,
+                    y: 0,
+                    x2: 1,
+                    y2: 0,
+                    colorStops: [
+                      { offset: 0, color: "#673AB7" },
+                      { offset: 1, color: "#9575CD" },
+                    ],
+                  },
+                },
+              },
+            ],
+            itemStyle: {
+              borderRadius: [0, 8, 8, 0],
+            },
+          },
+        ],
+      };
+
+      if (option && typeof option === "object") {
+        myChart.setOption(option);
+      }
+
+      window.addEventListener("resize", myChart.resize);
+    </script>
+  </body>
+</html>

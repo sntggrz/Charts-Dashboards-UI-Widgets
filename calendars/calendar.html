@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Requests Calendar</title>
+    <style>
+      :root {
+        --text: #111114;
+        --muted: rgba(17, 17, 20, 0.6);
+        --line: rgba(17, 17, 20, 0.08);
+        --shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+        --shadow2: 0 6px 14px rgba(0, 0, 0, 0.06);
+        --radius: 18px;
+
+        --blue: #0a84ff;
+        --green: #34c759;
+        --orange: #ff9f0a;
+        --pink: #ff2d55;
+        --gray: rgba(17, 17, 20, 0.3);
+
+        --tap: rgba(10, 132, 255, 0.12);
+
+        --wv-height: 600px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: transparent;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial;
+        color: var(--text);
+      }
+
+      .app {
+        width: 100%;
+        height: 100%;
+        padding: 8px;
+      }
+
+      .panel {
+        width: 100%;
+        height: 100%;
+        min-height: var(--wv-height);
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: none;
+        overflow: hidden;
+
+        display: flex;
+        flex-direction: column;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.92);
+        flex: 0 0 auto;
+      }
+
+      .btnRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.85);
+        color: var(--text);
+        padding: 6px 9px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition:
+          transform 0.08s ease,
+          filter 0.15s ease,
+          background 0.15s ease;
+        font-weight: 650;
+        font-size: 12px;
+        box-shadow: var(--shadow2);
+      }
+      .btn:hover {
+        filter: brightness(1.02);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn.primary {
+        border-color: rgba(10, 132, 255, 0.22);
+        background: rgba(10, 132, 255, 0.12);
+      }
+
+      .titleBlock {
+        display: grid;
+        gap: 2px;
+        text-align: right;
+      }
+      .title {
+        font-size: 16px;
+        font-weight: 750;
+        letter-spacing: -0.2px;
+      }
+      .sub {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .dow {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.82);
+        flex: 0 0 auto;
+      }
+      .dow div {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .days {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .day {
+        position: relative;
+        padding: 6px 6px 7px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.55);
+        transition: background 0.15s ease;
+        overflow: hidden;
+      }
+      .day:nth-child(7n) {
+        border-right: none;
+      }
+      .day:hover {
+        background: rgba(255, 255, 255, 0.82);
+      }
+      .day.out {
+        color: rgba(17, 17, 20, 0.35);
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .numRow {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+      }
+
+      .num {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        font-size: 11px;
+        font-weight: 750;
+        color: rgba(17, 17, 20, 0.7);
+      }
+      .day.today .num {
+        background: var(--pink);
+        border: 1px solid var(--pink);
+        color: #ffffff;
+      }
+      .day.selected {
+        background: var(--tap);
+        outline-offset: 0px;
+      }
+
+      .mini {
+        margin-top: 6px;
+        padding: 6px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(17, 17, 20, 0.06);
+        background: rgba(255, 255, 255, 0.85);
+        display: grid;
+        gap: 3px;
+      }
+
+      .miniTop {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .statusDot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+      }
+
+      .miniTitle {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: -0.1px;
+        color: rgba(17, 17, 20, 0.88);
+      }
+
+      .miniMeta {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <div class="panel">
+        <div class="toolbar">
+          <div class="btnRow">
+            <button class="btn" id="prevBtn">◀</button>
+            <button class="btn primary" id="todayBtn">Today</button>
+            <button class="btn" id="nextBtn">▶</button>
+          </div>
+
+          <div class="titleBlock">
+            <div class="title" id="monthTitle">—</div>
+          </div>
+        </div>
+
+        <div class="dow" id="dow"></div>
+        <div class="days" id="days"></div>
+      </div>
+    </div>
+
+    <script>
+      const OPEN_ACTION = 'open-request';
+      const FM_REQUESTS_DATA = `2026-02-15|REQ-123|Pending 2026-02-20|REQ-456|Approved`;
+
+      const pad2 = (n) => String(n).padStart(2, '0');
+      const ymd = (d) =>
+        `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+      function statusColor(status) {
+        const s = String(status || '').toLowerCase();
+        if (
+          s.includes('approved') ||
+          s.includes('done') ||
+          s.includes('completed')
+        )
+          return 'var(--green)';
+        if (
+          s.includes('pending') ||
+          s.includes('open') ||
+          s.includes('in progress')
+        )
+          return 'var(--blue)';
+        if (
+          s.includes('blocked') ||
+          s.includes('rejected') ||
+          s.includes('cancel')
+        )
+          return 'var(--pink)';
+        if (s.includes('scheduled')) return 'var(--orange)';
+        return 'var(--gray)';
+      }
+
+      function emitAction(action, payload) {
+        // Neutral hook: any host page can listen for 'widget:action'.
+        const detail = { action, payload };
+        window.dispatchEvent(new CustomEvent('widget:action', { detail }));
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'widget:action', ...detail }, '*');
+        }
+        console.log('[widget:action]', action, payload);
+      }
+
+            let requestsByDate = {};
+
+      function loadRequestsFromEmbeddedData() {
+        const lines = (FM_REQUESTS_DATA || '')
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean);
+
+        const next = {};
+
+        for (const line of lines) {
+          const parts = line.split('|');
+          if (parts.length < 3) continue;
+
+          const date = parts[0].trim();
+          const id = parts[1].trim();
+          const status = parts.slice(2).join('|').trim();
+
+          if (!date || !id) continue;
+
+          next[date] = {
+            date,
+            id_request: id,
+            status,
+          };
+        }
+
+        requestsByDate = next;
+      }
+
+      const now = new Date();
+      let viewYear = now.getFullYear();
+      let viewMonth = now.getMonth();
+      let selectedYMD = null;
+
+      const dowEl = document.getElementById('dow');
+      const daysEl = document.getElementById('days');
+      const monthTitleEl = document.getElementById('monthTitle');
+
+      document.getElementById('prevBtn').addEventListener('click', () => {
+        viewMonth--;
+        if (viewMonth < 0) {
+          viewMonth = 11;
+          viewYear--;
+        }
+        render();
+      });
+
+      document.getElementById('nextBtn').addEventListener('click', () => {
+        viewMonth++;
+        if (viewMonth > 11) {
+          viewMonth = 0;
+          viewYear++;
+        }
+        render();
+      });
+
+      document.getElementById('todayBtn').addEventListener('click', () => {
+        viewYear = now.getFullYear();
+        viewMonth = now.getMonth();
+        render();
+      });
+
+      const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      function render() {
+        const first = new Date(viewYear, viewMonth, 1);
+        monthTitleEl.textContent = first.toLocaleDateString(undefined, {
+          month: 'long',
+          year: 'numeric',
+        });
+
+        dowEl.innerHTML = '';
+        for (const name of DOW) {
+          const cell = document.createElement('div');
+          cell.textContent = name;
+          dowEl.appendChild(cell);
+        }
+
+        daysEl.innerHTML = '';
+
+        const startDay = new Date(viewYear, viewMonth, 1);
+        const startDow = startDay.getDay();
+        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+        const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+        for (let i = 0; i < startDow; i++) {
+          const dayNum = prevMonthDays - (startDow - 1 - i);
+          const d = new Date(viewYear, viewMonth - 1, dayNum);
+          daysEl.appendChild(makeDayCell(d, true));
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const d = new Date(viewYear, viewMonth, day);
+          daysEl.appendChild(makeDayCell(d, false));
+        }
+
+        const total = daysEl.children.length;
+        const remaining = 42 - total;
+        for (let i = 1; i <= remaining; i++) {
+          const d = new Date(viewYear, viewMonth + 1, i);
+          daysEl.appendChild(makeDayCell(d, true));
+        }
+      }
+
+      function makeDayCell(dateObj, isOutside) {
+        const key = ymd(dateObj);
+        const req = requestsByDate[key];
+
+        const cell = document.createElement('div');
+        cell.className = 'day' + (isOutside ? ' out' : '');
+        if (key === ymd(now)) cell.classList.add('today');
+        if (selectedYMD && key === selectedYMD) cell.classList.add('selected');
+
+        const numRow = document.createElement('div');
+        numRow.className = 'numRow';
+
+        const num = document.createElement('div');
+        num.className = 'num';
+        num.textContent = dateObj.getDate();
+
+        numRow.appendChild(num);
+        cell.appendChild(numRow);
+
+        if (req) {
+          const mini = document.createElement('div');
+          mini.className = 'mini';
+
+          const top = document.createElement('div');
+          top.className = 'miniTop';
+
+          const left = document.createElement('div');
+          left.className = 'miniTitle';
+          left.textContent = req.id_request;
+
+          const dot = document.createElement('div');
+          dot.className = 'statusDot';
+          dot.style.background = statusColor(req.status);
+
+          top.appendChild(left);
+          top.appendChild(dot);
+
+          const meta = document.createElement('div');
+          meta.className = 'miniMeta';
+          meta.textContent = req.status || '—';
+
+          mini.appendChild(top);
+          mini.appendChild(meta);
+          cell.appendChild(mini);
+        }
+
+        cell.addEventListener('click', () => {
+          selectedYMD = key;
+          render();
+          if (!req) return;
+
+          emitAction(OPEN_ACTION, {
+            date: req.date,
+            status: req.status,
+            id_request: req.id_request,
+          });
+        });
+
+        return cell;
+      }
+
+      loadRequestsFromEmbeddedData();
+      render();
+    </script>
+  </body>
+</html>

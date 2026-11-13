@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <title>Stacked Line</title>
+    <meta charset="utf-8" />
+  </head>
+  <body style="height: 100%; margin: 0">
+    <div id="container" style="height: 100%"></div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+
+    <script type="text/javascript">
+      var dom = document.getElementById("container");
+      var myChart = echarts.init(dom, null, {
+        renderer: "canvas",
+        useDirtyRect: false,
+      });
+      var app = {};
+
+      var option;
+
+      const dates = [
+        "Dic 2023",
+        "Ene 2024",
+        "Feb 2024",
+        "Mar 2024",
+        "Abr 2024",
+        "May 2024",
+        "Jun 2024",
+        "Jul 2024",
+        "Ago 2024",
+        "Sept 2024",
+        "Oct 2024",
+        "Nov 2024",
+        "Dic 2024",
+      ];
+
+      const ventas = [954, 155, 661, 198, 901, 429, 75, 20, 100, 75, 0, ,];
+      const invitados = [
+        3700, 4668, 6095, 5338, 4673, 3728, 2823, 3891, 3868, 4543, 5084, 4548,
+        1831,
+      ];
+      const ventaPorInvitado = [
+        25.78, 3.32, 10.84, 3.7, 19.28, 11.52, 2.65, 0.51, 2.58, 1.65, 0, 0, 0,
+      ];
+
+      option = {
+        title: {
+          text: "Ventas general",
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+          },
+        },
+        tooltip: {
+          trigger: "axis",
+        },
+        legend: {
+          data: ["Ventas", "Invitados", "Venta x invitado"],
+        },
+        grid: {
+          left: "5%",
+          right: "5%",
+          bottom: "5%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: true,
+          data: dates,
+        },
+        yAxis: [
+          {
+            type: "value",
+            name: "Ventas",
+            nameLocation: "middle",
+            nameGap: 55,
+            splitLine: {
+              show: false,
+            },
+            axisLabel: {
+              formatter: function (value) {
+                if (value >= 1000000) {
+                  return value / 1000000 + "M";
+                } else if (value >= 1000) {
+                  return value / 1000 + "K";
+                }
+                return value;
+              },
+            },
+          },
+          {
+            type: "value",
+            name: "Invitados y Venta x invitado",
+            nameLocation: "middle",
+            nameGap: 55,
+            splitLine: {
+              show: false,
+            },
+            axisLabel: {
+              formatter: function (value) {
+                if (value >= 1000000) {
+                  return value / 1000000 + "M";
+                } else if (value >= 1000) {
+                  return value / 1000 + "K";
+                }
+                return value;
+              },
+            },
+          },
+        ],
+        // yAxis: [
+        //   {
+        //     type: 'value',
+        //     name: 'Ventas',
+        //     nameLocation: 'middle',
+        //     nameGap: 55,
+        //     splitLine: {
+        //       show: false,
+        //     },
+        //   },
+        //   {
+        //     type: 'value',
+        //     name: 'Invitados y Venta x invitado',
+        //     nameLocation: 'middle',
+        //     nameGap: 55,
+        //     splitLine: {
+        //       show: false,
+        //     },
+        //   },
+        // ],
+        series: [
+          {
+            data: ventas,
+            name: "Ventas",
+            yAxisIndex: 0,
+            color: ["#CB312A"],
+            type: "line",
+            symbol: "none",
+            lineStyle: {
+              width: 4,
+              cap: "round",
+            },
+            itemStyle: { color: "#6C2D18" },
+          },
+          {
+            data: invitados,
+            name: "Invitados",
+            yAxisIndex: 1,
+            color: ["#808080"],
+            type: "bar",
+            symbol: "none",
+            lineStyle: {
+              width: 4,
+              cap: "round",
+            },
+            itemStyle: { color: "#D3B13B" },
+          },
+          {
+            data: ventaPorInvitado,
+            name: "Venta x invitado",
+            yAxisIndex: 1,
+            color: ["#808080"],
+            type: "bar",
+            symbol: "none",
+            lineStyle: {
+              width: 4,
+              cap: "round",
+            },
+            itemStyle: { color: "#D2AEA9" },
+          },
+        ],
+      };
+
+      if (option && typeof option === "object") {
+        myChart.setOption(option);
+      }
+
+      window.addEventListener("resize", myChart.resize);
+    </script>
+  </body>
+</html>

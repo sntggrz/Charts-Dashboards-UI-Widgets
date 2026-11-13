@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es" style="height: 100%">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dynamic Progress</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --fg-1: #0b0b0f;
+        --fg-2: #6b7280;
+        --track: #e9eaec;
+        --bg: #ffffff;
+        --apple-blue-1: #55b7ff;
+        --apple-blue-2: #007aff;
+        --apple-red: #ff3b30;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg-1);
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+          'SF Pro Text', Inter, Roboto, 'Segoe UI', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      #container {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+    <script>
+      // ---- Inputs ----
+      let maxValue = 25_000_000;
+      let currentValue = 24_000_000;
+      let chartTitle = 'Contratos acumulados';
+
+      if (!maxValue || maxValue <= 0) maxValue = 1;
+
+      // Currency (MXN, no decimals)
+      const moneyFmt = (n) => {
+        try {
+          return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0,
+          }).format(n);
+        } catch {
+          return (
+            '$' + (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+          );
+        }
+      };
+
+      const dom = document.getElementById('container');
+      const chart = echarts.init(dom, null, {
+        renderer: 'canvas',
+        useDirtyRect: false,
+      });
+
+      function isSmall() {
+        return window.innerWidth < 480;
+      }
+
+      function buildOption(val, max) {
+        const over = val > max;
+        const pct = Math.round((val / max) * 100);
+        const bw = isSmall() ? 18 : 24; // bar width
+        const titleSize = isSmall() ? 16 : 18;
+        const vSize = isSmall() ? 24 : 28;
+        const sSize = isSmall() ? 12 : 12;
+
+        return {
+          backgroundColor: 'transparent',
+          animationDuration: 700,
+          animationDurationUpdate: 600,
+
+          title: [
+            {
+              text: chartTitle,
+              left: 'center',
+              top: isSmall() ? '3%' : '4%',
+              textStyle: {
+                fontSize: titleSize,
+                fontWeight: 600,
+                color: '#0b0b0f',
+                letterSpacing: 0.2,
+              },
+            },
+          ],
+
+          grid: {
+            left: '6%',
+            right: '6%',
+            top: isSmall() ? 80 : 96,
+            bottom: isSmall() ? 90 : 96,
+            containLabel: false,
+          },
+
+          xAxis: {
+            type: 'value',
+            min: 0,
+            max: max,
+            boundaryGap: [0, 0],
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: { show: false },
+            axisLabel: {
+              color: '#6b7280',
+              fontSize: isSmall() ? 10 : 11,
+              margin: 8,
+              formatter: (v) =>
+                v === 0 ? moneyFmt(0) : v === max ? moneyFmt(max) : '',
+            },
+          },
+          yAxis: {
+            type: 'category',
+            data: [''],
+            axisLine: { show: false },
+            axisTick: { show: false },
+            axisLabel: { show: false },
+          },
+
+          tooltip: { show: false },
+
+          // Value text + percent (centered under the bar)
+          graphic: {
+            elements: [
+              {
+                type: 'text',
+                left: 'center',
+                bottom: isSmall() ? 46 : 52,
+                style: {
+                  text: moneyFmt(val),
+                  fontSize: vSize,
+                  fontWeight: 700,
+                  fill: over ? '#ff3b30' : '#3a3a3c',
+                  align: 'center',
+                },
+              },
+              {
+                type: 'text',
+                left: 'center',
+                bottom: isSmall() ? 28 : 34,
+                style: {
+                  text: `${pct}% del objetivo`,
+                  fontSize: sSize,
+                  fontWeight: 500,
+                  fill: over ? '#ff3b30' : '#6b7280',
+                  align: 'center',
+                },
+              },
+            ],
+          },
+
+          series: [
+            {
+              type: 'bar',
+              data: [{ value: Math.min(val, max) }], // cap fill at max; text still shows real value
+              barWidth: bw,
+              showBackground: true,
+              backgroundStyle: {
+                color:
+                  getComputedStyle(document.documentElement)
+                    .getPropertyValue('--track')
+                    .trim() || '#e9eaec',
+                borderRadius: bw, // fully rounded track
+              },
+              itemStyle: {
+                borderRadius: bw,
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: '#55b7ff' },
+                  { offset: 1, color: '#007aff' },
+                ]),
+                shadowBlur: isSmall() ? 8 : 12,
+                shadowColor: 'rgba(0,122,255,0.35)',
+                shadowOffsetY: 2,
+              },
+              emphasis: { disabled: true },
+              z: 3,
+            },
+          ],
+        };
+      }
+
+      chart.setOption(buildOption(currentValue, maxValue));
+      window.addEventListener('resize', () => {
+        chart.setOption(buildOption(currentValue, maxValue));
+        chart.resize();
+      });
+
+      // Public API — keep same signature
+      function updateGauge(newValue, newMax, newTitle) {
+        if (typeof newMax === 'number' && newMax > 0) maxValue = newMax;
+        if (typeof newTitle === 'string' && newTitle.trim())
+          chartTitle = newTitle;
+        currentValue = Number.isFinite(+newValue) ? +newValue : 0;
+        chart.setOption(buildOption(currentValue, maxValue));
+      }
+      window.updateGauge = updateGauge;
+    </script>
+  </body>
+</html>

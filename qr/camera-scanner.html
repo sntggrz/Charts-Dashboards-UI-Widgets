@@ -1,0 +1,39 @@
+"data:text/html," & Let([ html = "<!DOCTYPE html>
+<html>
+  <head>
+    <title>Camera QR Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      #reader {
+        width: 100%;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="reader"></div>
+    <script>
+      function onScanSuccess(decodedText, decodedResult) {
+        window.location =
+          'fmp://$/" & Get(FileName) & "?script=QR%20Capture&param=' +
+          encodeURIComponent(decodedText);
+      }
+      const html5QrCode = new Html5Qrcode('reader');
+      html5QrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        onScanSuccess
+      );
+    </script>
+  </body>
+</html>
+" ]; html )

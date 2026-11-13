@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <title>Text Labels</title>
+    <meta charset="utf-8" />
+  </head>
+  <body style="height: 90vh; margin: 0">
+    <div id="container" style="height: 100%"></div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+
+    <script type="text/javascript">
+      var dom = document.getElementById("container");
+      var myChart = echarts.init(dom, null, {
+        renderer: "canvas",
+        useDirtyRect: false,
+      });
+
+      let data = [
+        { value: 104200, name: "Jardín" },
+        { value: 76755, name: "Nubes" },
+        { value: 40500, name: "Lunas" },
+        { value: 40000, name: "Casa de la Novia" },
+      ];
+      data = data.sort((a, b) => b.value - a.value).slice(0, 5);
+
+      // Calculate the total value
+      const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+
+      var option = {
+        title: {
+          text: `Top 5 Salones (Total: ${totalValue.toLocaleString()})`,
+          left: "center",
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+          },
+        },
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          orient: "vertical",
+          right: "0%",
+          top: "middle",
+          formatter: function (name) {
+            const item = option.series[0].data.find(
+              (data) => data.name === name
+            );
+            if (item) {
+              return `${name}: ${Number(item.value).toLocaleString()}`;
+            }
+            return name;
+          },
+        },
+        series: [
+          {
+            name: "Maquinaria",
+            type: "pie",
+            radius: ["50%", "70%"],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 5,
+              borderColor: "#fff",
+              borderWidth: 2,
+            },
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: false,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            color: [
+              "#FCDD6F",
+              "#A07C1B",
+              "#944F38",
+              "#431304",
+              "#900C3F",
+              "#F9EBC8",
+              "#FBF4F3",
+              "#6C2D18",
+            ],
+            data: data,
+          },
+        ],
+      };
+
+      if (option && typeof option === "object") {
+        myChart.setOption(option);
+      }
+
+      // Event listener for chart click
+      myChart.on("click", function (params) {
+        if (params.seriesType === "pie") {
+          alert(`You clicked on: ${params.name} with value: ${params.value}`);
+        }
+      });
+
+      window.addEventListener("resize", myChart.resize);
+    </script>
+  </body>
+</html>

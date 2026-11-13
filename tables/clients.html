@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Clients</title>
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #e5e5e5;
+        overflow: hidden;
+      }
+
+      *,
+      *:before,
+      *:after {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --wrapper-h: 650px;
+        --toolbar-h: 64px;
+        --header-h: 48px;
+      }
+
+      .table-wrapper {
+        min-height: var(--wrapper-h);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+      }
+
+      .toolbar {
+        height: var(--toolbar-h);
+        padding: 0 16px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .toolbar input {
+        width: 420px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .btn-primary {
+        padding: 8px 14px;
+        font-size: 13px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        background: #2563eb;
+        color: #ffffff;
+      }
+
+      .table-header,
+      .table-row {
+        display: grid;
+        grid-template-columns:
+          minmax(170px, 2fr) /* Razón Social */
+          minmax(170px, 1.6fr) /* Nombre comercial */
+          minmax(210px, 2fr) /* Correo */
+          minmax(130px, 1.2fr) /* Teléfono */
+          minmax(180px, 1.7fr) /* Contacto */
+          minmax(130px, 1.2fr) /* Estatus */
+          minmax(170px, 1.4fr); /* Acciones */
+        align-items: center;
+        padding: 0 16px;
+      }
+
+      .table-header {
+        height: var(--header-h);
+        background: #fafafa;
+        font-size: 12px;
+        font-weight: 500;
+        color: #666;
+        border-bottom: 1px solid #eee;
+      }
+
+      .table-header div {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        user-select: none;
+      }
+
+      .table-header div:last-child {
+        cursor: default;
+      }
+
+      .sort-indicator {
+        font-size: 10px;
+        opacity: 0.6;
+      }
+
+      .table-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+      }
+
+      .table-row {
+        padding: 11px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+      }
+
+      .table-row:hover {
+        background: #f5f8ff;
+      }
+
+      .status {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-block;
+        line-height: 1.1;
+        white-space: nowrap;
+      }
+
+      /* Estatus base */
+      .status.activo {
+        background: #e8fff4;
+        color: #1e8e5a;
+      }
+
+      .status.inactivo {
+        background: #f1f1f1;
+        color: #666;
+      }
+
+      /* Nuevos estatus */
+      .status.pendiente-alta {
+        background: #fff4e5;
+        color: #b45309;
+      }
+
+      .status.pendiente-baja {
+        background: #eef2ff;
+        color: #4338ca;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .action-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .action-btn.view {
+        background: #e0f1ff;
+        color: #2563eb;
+      }
+
+      .action-btn.edit {
+        background: #fff4e5;
+        color: #d97706;
+      }
+
+      .action-btn.delete {
+        background: #fde8e8;
+        color: #dc2626;
+      }
+
+      /* Column text ellipsis (opcional pero útil) */
+      .ellipsis {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="table-wrapper">
+      <div class="toolbar">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Buscar por razón social, nombre comercial, correo, teléfono, contacto o estatus..."
+        />
+        <button class="btn-primary">+ Nuevo Cliente</button>
+      </div>
+
+      <div class="table-header">
+        <div data-field="razon">
+          Razón Social <span class="sort-indicator"></span>
+        </div>
+        <div data-field="nombreComercial">
+          Nombre comercial <span class="sort-indicator"></span>
+        </div>
+        <div data-field="correo">
+          Correo <span class="sort-indicator"></span>
+        </div>
+        <div data-field="telefono">
+          Teléfono <span class="sort-indicator"></span>
+        </div>
+        <div data-field="contacto">
+          Contacto <span class="sort-indicator"></span>
+        </div>
+        <div data-field="estatus">
+          Estatus <span class="sort-indicator"></span>
+        </div>
+        <div>Acciones</div>
+      </div>
+
+      <div class="table-scroll">
+        <div id="table-body"></div>
+      </div>
+    </div>
+
+    <script>
+      const originalData = [
+        {
+          id: 1,
+          razon: 'Comercializadora Norte SA de CV',
+          nombreComercial: 'Norte Trading',
+          correo: 'ventas@norte.com',
+          telefono: '81 1234 5678',
+          contacto: 'Juan Pérez',
+          estatus: 'Activo',
+        },
+        {
+          id: 2,
+          razon: 'Servicios Industriales Delta',
+          nombreComercial: 'Delta Industrial',
+          correo: 'contacto@delta.mx',
+          telefono: '55 9876 5432',
+          contacto: 'María López',
+          estatus: 'Pendiente Alta',
+        },
+        {
+          id: 3,
+          razon: 'Construcciones Atlas',
+          nombreComercial: 'Atlas Obra',
+          correo: 'info@atlas.com',
+          telefono: '33 4567 8899',
+          contacto: 'Carlos Hernández',
+          estatus: 'Pendiente Baja',
+        },
+        {
+          id: 4,
+          razon: 'Grupo Logístico Sierra',
+          nombreComercial: 'Sierra Logistics',
+          correo: 'hola@sierra.mx',
+          telefono: '81 2233 4455',
+          contacto: 'Ana Torres',
+          estatus: 'Inactivo',
+        },
+      ];
+
+      let filteredData = originalData.slice();
+      const copySvg =
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      const checkSvg =
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      let currentSort = { field: null, dir: 'asc' };
+
+      function statusClass(status) {
+        // "Pendiente Alta" -> "pendiente-alta"
+        return String(status || '')
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '-');
+      }
+
+      function safe(v) {
+        return v == null ? '' : String(v);
+      }
+
+      function render() {
+        const body = document.getElementById('table-body');
+        body.innerHTML = '';
+
+        filteredData.forEach((r) => {
+          const row = document.createElement('div');
+          row.className = 'table-row';
+
+          const estatusTxt = safe(r.estatus);
+          const isInactive = estatusTxt.trim().toLowerCase() === 'inactivo';
+
+          row.innerHTML =
+            "<div class='ellipsis'>" +
+            safe(r.razon) +
+            '</div>' +
+            "<div class='ellipsis'>" +
+            safe(r.nombreComercial) +
+            '</div>' +
+            "<div class='correo-cell'>" +
+            "<span class='correo-text'>" +
+            safe(r.correo) +
+            '</span>' +
+            "<button class='copy-btn' type='button' title='Copiar correo'>" +
+            copySvg +
+            '</button>' +
+            '</div>' +
+            "<div class='ellipsis'>" +
+            safe(r.telefono) +
+            '</div>' +
+            "<div class='ellipsis'>" +
+            safe(r.contacto) +
+            '</div>' +
+            "<div><span class='status " +
+            statusClass(estatusTxt) +
+            "'>" +
+            estatusTxt +
+            '</span></div>' +
+            "<div class='actions'>" +
+            "<button class='action-btn view' data-action='ver' data-id='" +
+            safe(r.id) +
+            "'>Ver</button>" +
+            (!isInactive
+              ? "<button class='action-btn edit' data-action='editar' data-id='" +
+                safe(r.id) +
+                "'>Editar</button>"
+              : '') +
+            (!isInactive
+              ? "<button class='action-btn delete' data-action='eliminar' data-id='" +
+                safe(r.id) +
+                "'>Eliminar</button>"
+              : '') +
+            '</div>';
+
+          const copyBtn = row.querySelector('.copy-btn');
+          copyBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const mail = safe(r.correo);
+            if (!mail) return;
+
+            navigator.clipboard.writeText(mail).then(() => {
+              copyBtn.innerHTML = checkSvg;
+              copyBtn.classList.add('copied');
+              setTimeout(() => {
+                copyBtn.innerHTML = copySvg;
+                copyBtn.classList.remove('copied');
+              }, 1200);
+            });
+          });
+
+          body.appendChild(row);
+        });
+      }
+
+      function applySearch(text) {
+        const t = String(text || '')
+          .toLowerCase()
+          .trim();
+
+        if (!t) {
+          filteredData = originalData.slice();
+          applySort();
+          return;
+        }
+
+        filteredData = originalData.filter((r) => {
+          return (
+            safe(r.razon).toLowerCase().includes(t) ||
+            safe(r.nombreComercial).toLowerCase().includes(t) ||
+            safe(r.correo).toLowerCase().includes(t) ||
+            safe(r.telefono).toLowerCase().includes(t) ||
+            safe(r.contacto).toLowerCase().includes(t) ||
+            safe(r.estatus).toLowerCase().includes(t)
+          );
+        });
+
+        applySort();
+      }
+
+      function applySort() {
+        if (!currentSort.field) {
+          render();
+          return;
+        }
+
+        const f = currentSort.field;
+        const d = currentSort.dir;
+
+        filteredData.sort((a, b) => {
+          const v1 = safe(a[f]).toLowerCase();
+          const v2 = safe(b[f]).toLowerCase();
+          if (v1 < v2) return d === 'asc' ? -1 : 1;
+          if (v1 > v2) return d === 'asc' ? 1 : -1;
+          return 0;
+        });
+
+        render();
+      }
+
+      function setSort(field, header) {
+        document
+          .querySelectorAll('.sort-indicator')
+          .forEach((i) => (i.textContent = ''));
+
+        if (currentSort.field === field) {
+          currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+        } else {
+          currentSort.field = field;
+          currentSort.dir = 'asc';
+        }
+
+        header.querySelector('.sort-indicator').textContent =
+          currentSort.dir === 'asc' ? '▲' : '▼';
+
+        applySort();
+      }
+
+      document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.action-btn');
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        const names = { ver: 'view-client', editar: 'edit-client', eliminar: 'delete-client' };
+        if (names[action]) emitAction(names[action], { id });
+      });
+
+      function emitAction(action, payload) {
+        // Neutral hook: any host page can listen for 'widget:action'.
+        const detail = { action, payload };
+        window.dispatchEvent(new CustomEvent('widget:action', { detail }));
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'widget:action', ...detail }, '*');
+        }
+        console.log('[widget:action]', action, payload);
+      }
+
+
+      document.addEventListener('DOMContentLoaded', function () {
+        render();
+
+        document
+          .getElementById('searchInput')
+          .addEventListener('input', (e) => applySearch(e.target.value));
+
+        document
+          .querySelectorAll('.table-header div[data-field]')
+          .forEach((h) =>
+            h.addEventListener('click', () => setSort(h.dataset.field, h)),
+          );
+      });
+    </script>
+  </body>
+</html>

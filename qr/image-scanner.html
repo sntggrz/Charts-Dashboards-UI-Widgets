@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>QR Scan from Image</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #15171c;
+        background: #fff;
+      }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      .hint { margin: 0 0 14px; color: #636a76; font-size: 13px; }
+      .drop {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+        min-height: 150px; padding: 16px; border: 1.5px dashed #c9ced6; border-radius: 10px;
+        background: #fafbfc; cursor: pointer; text-align: center; color: #636a76;
+      }
+      .drop:hover { border-color: #2f6fed; color: #2f6fed; }
+      .drop input { display: none; }
+      .drop strong { color: #15171c; }
+      #preview { display: none; max-width: 100%; max-height: 140px; border-radius: 6px; }
+      #preview[src]:not([src='']) { display: block; }
+      #file-qr-result { font-weight: 600; margin: 12px 0 0; word-break: break-all; }
+    </style>
+    <script type="module">
+      import QrScanner from 'https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js';
+
+      window.addEventListener('DOMContentLoaded', () => {
+        const fileSelector = document.getElementById('file-selector');
+        const resultDisplay = document.getElementById('file-qr-result');
+        const previewImage = document.getElementById('preview');
+
+        const allowedTypes = [
+          'image/png',
+          'image/jpeg',
+          'image/jpg',
+          'image/webp',
+        ];
+
+        fileSelector.addEventListener('change', async (event) => {
+          const file = event.target.files[0];
+          resultDisplay.textContent = '';
+          resultDisplay.style.color = '';
+          previewImage.removeAttribute('src');
+
+          if (!file) return;
+
+          if (!allowedTypes.includes(file.type)) {
+            resultDisplay.textContent = `❌ Unsupported file type: ${file.type}`;
+            resultDisplay.style.color = 'orangered';
+            return;
+          }
+
+          const imageURL = URL.createObjectURL(file);
+          previewImage.src = imageURL;
+
+          const img = new Image();
+          img.onload = async () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            const dataUrl = canvas.toDataURL('image/png');
+
+            try {
+              const result = await QrScanner.scanImage(dataUrl, {
+                returnDetailedScanResult: true,
+              });
+              resultDisplay.textContent = `✅ QR Code: ${result.data}`;
+              resultDisplay.style.color = 'green';
+            } catch (err) {
+              resultDisplay.textContent = `❌ No QR code found. ${
+                err.message || err
+              }`;
+              resultDisplay.style.color = 'red';
+            }
+          };
+
+          img.onerror = () => {
+            resultDisplay.textContent =
+              '❌ Error loading image for conversion.';
+            resultDisplay.style.color = 'red';
+          };
+
+          img.src = imageURL;
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Scan a QR code from an image</h1>
+    <p class="hint">PNG, JPG or WebP. Decoding happens in your browser; nothing is uploaded.</p>
+    <label class="drop">
+      <input type="file" id="file-selector" accept="image/*" />
+      <img id="preview" alt="Selected image preview" />
+      <span><strong>Choose an image</strong> or take a photo</span>
+    </label>
+    <p id="file-qr-result" role="status"></p>
+  </body>
+</html>

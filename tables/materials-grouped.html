@@ -1,0 +1,1383 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Materials Table</title>
+
+    <style>
+      :root {
+        --primary: #695a68;
+        --primary-dark: #4e434d;
+        --primary-light: #8a7a88;
+        --primary-very-light: #f4f1f4;
+        --primary-soft: #e8e3e8;
+        --danger: #b04a4a;
+        --danger-dark: #922f2f;
+        --bulkbar-h: 64px;
+        --cols: 70px 180px 200px 110px 130px 130px 90px 90px 130px 90px 130px
+          120px;
+      }
+
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #fff;
+        margin: 0;
+        padding: 24px;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin: 0 0 12px 0;
+        flex-wrap: wrap;
+      }
+
+      .toolbar .spacer {
+        flex: 1;
+      }
+
+      .btn {
+        border: none;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        transition: 0.15s ease;
+        background: var(--primary);
+        color: white;
+      }
+      .btn:hover {
+        background: var(--primary-dark);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--primary-dark);
+        border: 1px solid rgba(105, 90, 104, 0.28);
+      }
+      .btn-ghost:hover {
+        background: rgba(105, 90, 104, 0.08);
+      }
+
+      .table-container {
+        height: calc(100vh - 110px);
+        display: grid;
+        border-radius: 14px;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      /* Key change: we keep scroll for the table body, but reserve space for a sticky footer bar
+         so the bar never covers the last rows */
+      .table-scroll {
+        overflow: auto;
+        min-height: 0;
+        background: #fff;
+        padding-bottom: var(--bulkbar-h);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        background: #fff;
+      }
+
+      th {
+        background: var(--primary-dark);
+        color: white;
+        padding: 14px;
+        font-weight: 500;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+      }
+      .th-number {
+        text-align: right;
+      }
+
+      td {
+        padding: 12px 14px;
+        vertical-align: middle;
+      }
+
+      .number {
+        text-align: right;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .group-header {
+        background: var(--primary-soft);
+        font-weight: 800;
+        cursor: pointer;
+        color: var(--primary-dark);
+      }
+      .group-header:hover {
+        background: var(--primary-light);
+        color: white;
+      }
+
+      .material-row {
+        transition: background 0.18s ease;
+      }
+      .material-row:hover {
+        background: rgba(105, 90, 104, 0.08);
+      }
+
+      .toggle-icon {
+        display: inline-block;
+        width: 16px;
+        margin-right: 6px;
+        font-weight: 900;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      /* The in-table tfoot is now just a data source; it won't be displayed */
+      tfoot {
+        display: none;
+      }
+
+      /* Sticky footer bar that includes BOTH the bulk controls + the grand total row */
+      .bulk-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 6;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(8px);
+        border-top: 1px solid rgba(105, 90, 104, 0.14);
+        min-height: var(--bulkbar-h);
+        box-sizing: border-box;
+      }
+
+      .bulk-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .bulk-label {
+        font-weight: 800;
+        font-size: 12px;
+        color: rgba(78, 67, 77, 0.85);
+      }
+
+      .bulk-input {
+        width: 110px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(105, 90, 104, 0.28);
+        outline: none;
+        font: inherit;
+      }
+
+      .bulk-input:focus {
+        border-color: rgba(105, 90, 104, 0.65);
+        box-shadow: 0 0 0 3px rgba(105, 90, 104, 0.12);
+      }
+
+      .bulk-apply {
+        padding: 10px 12px;
+      }
+
+      .bulk-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: rgba(78, 67, 77, 0.7);
+        font-weight: 700;
+        user-select: none;
+      }
+
+      /* Footer totals layout (replaces visible <tfoot>) */
+      .footer-totals {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+
+      .total-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(105, 90, 104, 0.18);
+        background: rgba(105, 90, 104, 0.06);
+        color: rgba(78, 67, 77, 0.92);
+        font-weight: 800;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .total-chip b {
+        font-weight: 900;
+      }
+
+      td[data-editable='true'] {
+        cursor: text;
+      }
+      td[data-editable='true']:hover {
+        outline: 2px solid rgba(105, 90, 104, 0.15);
+        outline-offset: -2px;
+        border-radius: 6px;
+      }
+
+      .cell-input {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(105, 90, 104, 0.35);
+        outline: none;
+        background: white;
+        text-align: left !important;
+      }
+      .cell-input:focus {
+        border-color: rgba(105, 90, 104, 0.7);
+        box-shadow: 0 0 0 3px rgba(105, 90, 104, 0.15);
+      }
+
+      .actions-cell {
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .icon-btn {
+        border: none;
+        padding: 7px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: 0.15s ease;
+        font-weight: 800;
+      }
+      .icon-del {
+        background: var(--danger);
+        color: white;
+      }
+      .icon-del:hover {
+        background: var(--danger-dark);
+      }
+
+      /* Modal */
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 17, 20, 0.35);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 50;
+      }
+      .backdrop.open {
+        display: flex;
+      }
+
+      .modal {
+        width: min(820px, 100%);
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+        overflow: hidden;
+        border: 1px solid rgba(105, 90, 104, 0.18);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background: var(--primary-soft);
+        color: var(--primary-dark);
+        font-weight: 900;
+      }
+
+      .modal-body {
+        padding: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 12px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .label {
+        font-size: 12px;
+        color: rgba(78, 67, 77, 0.9);
+        font-weight: 800;
+      }
+
+      .input,
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(105, 90, 104, 0.28);
+        outline: none;
+        font: inherit;
+        background: white;
+      }
+      .input:focus,
+      select:focus {
+        border-color: rgba(105, 90, 104, 0.65);
+        box-shadow: 0 0 0 3px rgba(105, 90, 104, 0.12);
+      }
+
+      .help {
+        font-size: 12px;
+        color: rgba(78, 67, 77, 0.65);
+      }
+
+      .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 14px 16px;
+        background: #fff;
+        border-top: 1px solid rgba(105, 90, 104, 0.14);
+      }
+
+      .pill {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+
+        padding: 9px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(105, 90, 104, 0.22);
+        color: var(--primary-dark);
+        background: rgba(105, 90, 104, 0.06);
+
+        font-weight: 700;
+        font-size: 13px;
+
+        width: fit-content;
+        max-width: 520px;
+        white-space: nowrap;
+      }
+      .pill .metric {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pill .label {
+        font-weight: 600;
+        opacity: 0.7;
+      }
+      .pill b {
+        font-weight: 900;
+      }
+
+      @media (max-width: 720px) {
+        body {
+          padding: 16px;
+        }
+        .table-container {
+          height: calc(100vh - 102px);
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .col-6,
+        .col-4,
+        .col-3,
+        .col-2,
+        .col-12 {
+          grid-column: 1 / -1 !important;
+        }
+        .search-wrapper {
+          width: 100%;
+          flex: 1 1 100%;
+        }
+        .footer-totals {
+          width: 100%;
+          justify-content: flex-start;
+          margin-left: 0;
+        }
+      }
+
+      .col-12 {
+        grid-column: span 12;
+      }
+      .col-6 {
+        grid-column: span 6;
+      }
+      .col-4 {
+        grid-column: span 4;
+      }
+      .col-3 {
+        grid-column: span 3;
+      }
+      .col-2 {
+        grid-column: span 2;
+      }
+      .search-wrapper {
+        position: relative;
+        width: 420px;
+        flex: 0 0 auto;
+      }
+
+      .search-input {
+        width: 100%;
+        height: 40px;
+        padding: 0 44px 0 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(105, 90, 104, 0.28);
+        outline: none;
+        font: inherit;
+        box-sizing: border-box;
+      }
+
+      .search-input:focus {
+        border-color: rgba(105, 90, 104, 0.65);
+        box-shadow: 0 0 0 3px rgba(105, 90, 104, 0.12);
+      }
+
+      .clear-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+
+        display: none;
+        align-items: center;
+        justify-content: center;
+
+        border: 1px solid rgba(105, 90, 104, 0.22);
+        background: rgba(105, 90, 104, 0.06);
+        cursor: pointer;
+
+        line-height: 1;
+        font-size: 14px;
+        color: rgba(78, 67, 77, 0.85);
+      }
+
+      .clear-btn:hover {
+        background: rgba(105, 90, 104, 0.12);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="toolbar">
+      <button class="btn" id="btnAddMaterial">+ Agregar material</button>
+      <div class="spacer"></div>
+      <div class="search-wrapper">
+        <input
+          id="searchInput"
+          class="search-input"
+          placeholder="Buscar (grupo, nombre, proveedor, id...)"
+        />
+        <button id="clearSearch" class="clear-btn" type="button">✕</button>
+      </div>
+      <button class="btn-ghost btn" id="btnCollapseAll">Colapsar todo</button>
+      <button class="btn-ghost btn" id="btnExpandAll">Expandir todo</button>
+    </div>
+
+    <div class="table-container">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 70px">ID</th>
+              <th>Nombre</th>
+              <th>Proveedor</th>
+
+              <th class="th-number">Cantidad</th>
+              <th class="th-number">Precio Costo</th>
+              <th class="th-number">Total Costo</th>
+
+              <th class="th-number">Misc.</th>
+              <th class="th-number">Herr.</th>
+              <th class="th-number">Total Venta</th>
+
+              <th class="th-number">Margen</th>
+              <th class="th-number">Total</th>
+
+              <th style="width: 110px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+
+          <!-- Kept for semantics / data source (hidden via CSS) -->
+          <tfoot id="tableFooter"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sticky footer bar (always visible) now contains BOTH: bulk controls + grand totals -->
+    <div class="bulk-bar" id="bulkBar">
+      <div class="bulk-left">
+        <span class="bulk-label">Margen global (%)</span>
+
+        <input
+          id="bulkMargen"
+          class="bulk-input"
+          placeholder="Ej. 60"
+          inputmode="decimal"
+        />
+
+        <button
+          class="btn-ghost btn bulk-apply"
+          id="btnApplyMargen"
+          type="button"
+        >
+          Aplicar a todos
+        </button>
+      </div>
+
+      <div class="footer-totals" aria-label="Totales">
+        <span class="total-chip"
+          >Gran Total Costo: <b id="grandCostoChip">$0.00</b></span
+        >
+        <span class="total-chip"
+          >Gran Total Venta: <b id="grandVentaChip">$0.00</b></span
+        >
+        <span class="total-chip"
+          >Gran Total: <b id="grandTotalChip">$0.00</b></span
+        >
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="backdrop" id="backdrop" aria-hidden="true">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
+        <div class="modal-header">
+          <div id="modalTitle">Agregar material</div>
+          <button class="btn-ghost btn" id="btnCloseModal">Cerrar</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="grid">
+            <div class="field col-6">
+              <div class="label">Grupo</div>
+              <select id="fGroup"></select>
+              <div class="help">
+                Elige el grupo donde se agregará el material.
+              </div>
+            </div>
+
+            <div class="field col-6">
+              <div class="label">ID (opcional)</div>
+              <input
+                class="input"
+                id="fId"
+                placeholder="Auto si se deja vacío"
+                inputmode="numeric"
+              />
+              <div class="help">Deja vacío para auto-generar.</div>
+            </div>
+
+            <div class="field col-6">
+              <div class="label">Nombre</div>
+              <input class="input" id="fName" placeholder="Ej. Triplay" />
+            </div>
+
+            <div class="field col-6">
+              <div class="label">Proveedor</div>
+              <input class="input" id="fProvider" placeholder="Ej. HomeDepot" />
+            </div>
+
+            <div class="field col-2">
+              <div class="label">Cantidad</div>
+              <input
+                class="input"
+                id="fAmount"
+                placeholder="1"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="field col-2">
+              <div class="label">Precio Costo</div>
+              <input
+                class="input"
+                id="fCost"
+                placeholder="0.00"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="field col-2">
+              <div class="label">Misc. (%)</div>
+              <input
+                class="input"
+                id="fMisc"
+                placeholder="0"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="field col-2">
+              <div class="label">Herr. (%)</div>
+              <input
+                class="input"
+                id="fHerr"
+                placeholder="0"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="field col-2">
+              <div class="label">Margen (%)</div>
+              <input
+                class="input"
+                id="fMargen"
+                placeholder="0"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="field col-4">
+              <div class="label">Preview</div>
+              <div class="pill">
+                <div class="metric">
+                  <span class="label">Venta</span>
+                  <b id="pSell">$0.00</b>
+                </div>
+                <div class="metric">
+                  <span class="label">Total</span>
+                  <b id="pTotal">$0.00</b>
+                </div>
+              </div>
+              <div class="help">
+                Venta = Costo + Misc + Herr. Total aplica margen.
+              </div>
+            </div>
+
+            <div class="field col-12">
+              <div
+                class="help"
+                id="formError"
+                style="display: none; color: var(--danger); font-weight: 800"
+              >
+                Completa Grupo + Nombre. Los números deben ser válidos.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-ghost btn" id="btnCancel">Cancelar</button>
+          <button class="btn" id="btnSaveMaterial">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const GROUPS = ['Mano de Obra', 'Metales', 'Carpinteria'];
+
+      let data = {
+        'Mano de Obra': [
+          {
+            id: 1,
+            name: 'Carpintero',
+            provider: 'Materiales Sierra',
+            amount: 1,
+            cost: 162,
+            misc: 0,
+            herr: 0,
+            margen: 60,
+          },
+          {
+            id: 4,
+            name: 'Pintor',
+            provider: 'Aceros del Norte',
+            amount: 0,
+            cost: 142,
+            misc: 0,
+            herr: 0,
+            margen: 60,
+          },
+          {
+            id: 6,
+            name: 'Pulidor',
+            provider: 'Ferretería Central',
+            amount: 0,
+            cost: 109,
+            misc: 0,
+            herr: 0,
+            margen: 60,
+          },
+          {
+            id: 4,
+            name: 'Pintor',
+            provider: 'Aceros del Norte',
+            amount: 0,
+            cost: 142,
+            misc: 0,
+            herr: 0,
+            margen: 60,
+          },
+          {
+            id: 6,
+            name: 'Pulidor',
+            provider: 'Ferretería Central',
+            amount: 0,
+            cost: 109,
+            misc: 0,
+            herr: 0,
+            margen: 60,
+          },
+        ],
+        Metales: [
+          {
+            id: 3,
+            name: 'Steel Bar',
+            provider: 'MetalWorks',
+            amount: 20,
+            cost: 15,
+            misc: 4,
+            herr: 2,
+            margen: 18,
+          },
+          {
+            id: 4,
+            name: 'Aluminum Sheet',
+            provider: 'AluCorp',
+            amount: 8,
+            cost: 30,
+            misc: 4,
+            herr: 2,
+            margen: 18,
+          },
+        ],
+        Carpinteria: [
+          {
+            id: 5,
+            name: 'Copper Wire',
+            provider: 'ElectroMax',
+            amount: 50,
+            cost: 2,
+            misc: 6,
+            herr: 2,
+            margen: 15,
+          },
+          {
+            id: 6,
+            name: 'Switch Box',
+            provider: 'ElectroMax',
+            amount: 25,
+            cost: 3,
+            misc: 6,
+            herr: 2,
+            margen: 15,
+          },
+        ],
+      };
+
+      let searchTerm = '';
+
+      function normalize(s) {
+        return String(s ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+      }
+
+      function matchesSearch(groupName, item) {
+        const q = normalize(searchTerm);
+        if (!q) return true;
+
+        const haystack = normalize(
+          [
+            groupName,
+            item.id,
+            item.name,
+            item.provider,
+            item.amount,
+            item.cost,
+            item.misc,
+            item.herr,
+            item.margen,
+          ].join(' '),
+        );
+
+        return haystack.includes(q);
+      }
+
+      const collapsed = new Set();
+
+      const tableBody = document.getElementById('tableBody');
+      const tableFooter = document.getElementById('tableFooter');
+
+      const backdrop = document.getElementById('backdrop');
+      const btnAddMaterial = document.getElementById('btnAddMaterial');
+
+      const fGroup = document.getElementById('fGroup');
+      const fId = document.getElementById('fId');
+      const fName = document.getElementById('fName');
+      const fProvider = document.getElementById('fProvider');
+      const fAmount = document.getElementById('fAmount');
+      const fCost = document.getElementById('fCost');
+      const fMisc = document.getElementById('fMisc');
+      const fHerr = document.getElementById('fHerr');
+      const fMargen = document.getElementById('fMargen');
+
+      const pSell = document.getElementById('pSell');
+      const pTotal = document.getElementById('pTotal');
+      const formError = document.getElementById('formError');
+
+      const grandCostoChip = document.getElementById('grandCostoChip');
+      const grandVentaChip = document.getElementById('grandVentaChip');
+      const grandTotalChip = document.getElementById('grandTotalChip');
+
+      const money = (n) =>
+        '$' +
+        Number(n || 0).toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+
+      const num = (v) => {
+        const x = Number(String(v).replace(/[^0-9.\-]/g, ''));
+        return Number.isFinite(x) ? x : 0;
+      };
+
+      const pct = (v) => num(v);
+      const fmtPct = (n) => `${Number(n || 0)}%`;
+
+      function escapeHtml(v) {
+        return String(v ?? '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function nextId() {
+        let max = 0;
+        Object.values(data).forEach((arr) =>
+          arr.forEach((it) => (max = Math.max(max, Number(it.id) || 0))),
+        );
+        return max + 1;
+      }
+
+      function calcRow(item) {
+        const cantidad = num(item.amount);
+        const costo = num(item.cost);
+
+        const misc = pct(item.misc) / 100;
+        const herr = pct(item.herr) / 100;
+        const margen = pct(item.margen) / 100;
+
+        const totalCosto = cantidad * costo;
+        const totalVenta = totalCosto + totalCosto * misc + totalCosto * herr;
+
+        const denom = 1 - margen;
+        const total = denom <= 0 ? 0 : totalVenta / denom;
+
+        return { totalCosto, totalVenta, total };
+      }
+
+      function calcGroupTotals(items) {
+        return items.reduce(
+          (acc, item) => {
+            const r = calcRow(item);
+            acc.costo += r.totalCosto;
+            acc.venta += r.totalVenta;
+            acc.total += r.total;
+            return acc;
+          },
+          { costo: 0, venta: 0, total: 0 },
+        );
+      }
+
+      function calcGrandTotals() {
+        let costo = 0,
+          venta = 0,
+          total = 0;
+        Object.keys(data).forEach((g) => {
+          const t = calcGroupTotals(data[g]);
+          costo += t.costo;
+          venta += t.venta;
+          total += t.total;
+        });
+        return { costo, venta, total };
+      }
+
+      function render() {
+        tableBody.innerHTML = '';
+
+        const q = normalize(searchTerm);
+
+        GROUPS.filter((g) => data[g] && data[g].length).forEach(
+          (groupName, index) => {
+            const groupId = 'group_' + index;
+            const isCollapsed = collapsed.has(groupName);
+
+            // ✅ Filter items but keep ORIGINAL index for edit/delete
+            const originalItems = data[groupName];
+            const filtered = originalItems
+              .map((item, idx) => ({ item, idx }))
+              .filter(({ item }) =>
+                q ? matchesSearch(groupName, item) : true,
+              );
+
+            // If searching and no matches in this group -> hide group entirely
+            if (q && filtered.length === 0) return;
+
+            // Group totals should reflect ONLY what is shown when searching
+            const t = calcGroupTotals(filtered.map((x) => x.item));
+
+            const groupHeader = document.createElement('tr');
+            groupHeader.className = 'group-header';
+            groupHeader.dataset.groupId = groupId;
+            groupHeader.dataset.groupName = groupName;
+
+            groupHeader.innerHTML = `
+      <td><span class="toggle-icon">${isCollapsed ? '+' : '−'}</span></td>
+      <td colspan="4">${escapeHtml(groupName)}</td>
+      <td class="number" data-role="group-costo">${money(t.costo)}</td>
+      <td class="number"></td>
+      <td class="number"></td>
+      <td class="number" data-role="group-venta">${money(t.venta)}</td>
+      <td class="number"></td>
+      <td class="number" data-role="group-total">${money(t.total)}</td>
+      <td class="actions-cell"></td>
+    `;
+            tableBody.appendChild(groupHeader);
+
+            filtered.forEach(({ item, idx }) => {
+              const r = calcRow(item);
+
+              const row = document.createElement('tr');
+              row.classList.add(groupId, 'material-row');
+              if (isCollapsed) row.classList.add('hidden');
+              row.dataset.group = groupName;
+              row.dataset.index = idx; // ✅ original index in data[groupName]
+
+              row.innerHTML = `
+        <td>${escapeHtml(item.id)}</td>
+
+        <td data-editable="true" data-field="name">${escapeHtml(item.name)}</td>
+        <td data-editable="true" data-field="provider">${escapeHtml(item.provider)}</td>
+
+        <td class="number" data-editable="true" data-field="amount">${escapeHtml(item.amount)}</td>
+        <td class="number" data-editable="true" data-field="cost">${money(item.cost)}</td>
+
+        <td class="number" data-role="row-costo">${money(r.totalCosto)}</td>
+
+        <td class="number" data-editable="true" data-field="misc">${fmtPct(item.misc)}</td>
+        <td class="number" data-editable="true" data-field="herr">${fmtPct(item.herr)}</td>
+
+        <td class="number" data-role="row-venta">${money(r.totalVenta)}</td>
+
+        <td class="number" data-editable="true" data-field="margen">${fmtPct(item.margen)}</td>
+
+        <td class="number" data-role="row-total">${money(r.total)}</td>
+
+        <td class="actions-cell">
+          <button class="icon-btn icon-del" data-action="delete-item" title="Eliminar">Borrar</button>
+        </td>
+      `;
+              tableBody.appendChild(row);
+            });
+          },
+        );
+
+        // ✅ Grand totals: if searching, sum only visible rows
+        let g;
+        if (!q) {
+          g = calcGrandTotals();
+        } else {
+          let costo = 0,
+            venta = 0,
+            total = 0;
+
+          GROUPS.filter((gn) => data[gn] && data[gn].length).forEach((gn) => {
+            data[gn].forEach((item) => {
+              if (!matchesSearch(gn, item)) return;
+              const r = calcRow(item);
+              costo += r.totalCosto;
+              venta += r.totalVenta;
+              total += r.total;
+            });
+          });
+
+          g = { costo, venta, total };
+        }
+        grandCostoChip.textContent = money(g.costo);
+        grandVentaChip.textContent = money(g.venta);
+        grandTotalChip.textContent = money(g.total);
+
+        tableFooter.innerHTML = `
+    <tr class="grand-total">
+      <td colspan="5">Gran Total</td>
+      <td class="number" id="grandCosto">${money(g.costo)}</td>
+      <td class="number"></td>
+      <td class="number"></td>
+      <td class="number" id="grandVenta">${money(g.venta)}</td>
+      <td class="number"></td>
+      <td class="number" id="grandTotal">${money(g.total)}</td>
+      <td class="actions-cell"></td>
+    </tr>
+  `;
+
+        refreshGroupSelect();
+      }
+
+      function refreshGroupSelect() {
+        const current = fGroup.value;
+        fGroup.innerHTML = GROUPS.map(
+          (g) => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`,
+        ).join('');
+        if (GROUPS.includes(current)) fGroup.value = current;
+        else fGroup.value = GROUPS[0] || '';
+      }
+
+      function openModal() {
+        formError.style.display = 'none';
+        refreshGroupSelect();
+
+        fId.value = '';
+        fName.value = '';
+        fProvider.value = '';
+        fAmount.value = '1';
+        fCost.value = '0';
+        fMisc.value = '0';
+        fHerr.value = '0';
+        fMargen.value = '0';
+
+        updatePreview();
+
+        backdrop.classList.add('open');
+        backdrop.setAttribute('aria-hidden', 'false');
+        setTimeout(() => fName.focus(), 0);
+      }
+
+      function closeModal() {
+        backdrop.classList.remove('open');
+        backdrop.setAttribute('aria-hidden', 'true');
+      }
+
+      function updatePreview() {
+        const cantidad = num(fAmount.value);
+        const costo = num(fCost.value);
+        const misc = pct(fMisc.value) / 100;
+        const herr = pct(fHerr.value) / 100;
+        const margen = pct(fMargen.value) / 100;
+
+        const totalCosto = cantidad * costo;
+        const totalVenta = totalCosto + totalCosto * misc + totalCosto * herr;
+
+        const denom = 1 - margen;
+        const total = denom <= 0 ? 0 : totalVenta / denom;
+
+        pSell.textContent = money(totalVenta);
+        pTotal.textContent = money(total);
+      }
+
+      function saveMaterial() {
+        const groupName = fGroup.value;
+        const name = String(fName.value || '').trim();
+
+        const amount = num(fAmount.value);
+        const cost = num(fCost.value);
+        const misc = pct(fMisc.value);
+        const herr = pct(fHerr.value);
+        const margen = pct(fMargen.value);
+
+        if (!groupName || !name) {
+          formError.style.display = 'block';
+          return;
+        }
+
+        let idVal = String(fId.value || '').trim();
+        let id = idVal ? num(idVal) : nextId();
+        if (!Number.isFinite(id) || id <= 0) id = nextId();
+
+        if (!data[groupName]) data[groupName] = [];
+        data[groupName].push({
+          id,
+          name,
+          provider: String(fProvider.value || '').trim(),
+          amount,
+          cost,
+          misc,
+          herr,
+          margen,
+        });
+
+        closeModal();
+        render();
+      }
+
+      function collapseAll() {
+        Object.keys(data).forEach((g) => collapsed.add(g));
+        render();
+      }
+      function expandAll() {
+        collapsed.clear();
+        render();
+      }
+
+      function toggleGroup(groupHeader) {
+        const groupName = groupHeader.dataset.groupName;
+        const groupId = groupHeader.dataset.groupId;
+        const rows = document.querySelectorAll('.' + groupId);
+        const icon = groupHeader.querySelector('.toggle-icon');
+
+        const isCollapsed = collapsed.has(groupName);
+        if (isCollapsed) {
+          collapsed.delete(groupName);
+          rows.forEach((r) => r.classList.remove('hidden'));
+          icon.textContent = '−';
+        } else {
+          collapsed.add(groupName);
+          rows.forEach((r) => r.classList.add('hidden'));
+          icon.textContent = '+';
+        }
+      }
+
+      function deleteItem(tr) {
+        const groupName = tr.dataset.group;
+        const idx = Number(tr.dataset.index);
+
+        data[groupName].splice(idx, 1);
+
+        if (data[groupName].length === 0) {
+          delete data[groupName];
+          collapsed.delete(groupName);
+        }
+
+        render();
+      }
+
+      function startEdit(td) {
+        if (td.querySelector('input')) return;
+
+        const tr = td.closest('tr');
+        const groupName = tr.dataset.group;
+        const itemIndex = Number(tr.dataset.index);
+        const field = td.dataset.field;
+
+        const item = data[groupName][itemIndex];
+
+        let currentValue = item[field];
+        if (['amount', 'cost', 'misc', 'herr', 'margen'].includes(field))
+          currentValue = num(currentValue);
+
+        const input = document.createElement('input');
+        input.className = 'cell-input';
+        input.value = currentValue ?? '';
+        input.autocomplete = 'off';
+        input.type = 'text';
+        if (['amount', 'cost', 'misc', 'herr', 'margen'].includes(field))
+          input.inputMode = 'decimal';
+
+        const prev = td.textContent;
+        td.textContent = '';
+        td.appendChild(input);
+        input.focus();
+        input.select();
+
+        const commit = () => {
+          const newVal = input.value;
+
+          if (field === 'amount' || field === 'cost') item[field] = num(newVal);
+          else if (['misc', 'herr', 'margen'].includes(field))
+            item[field] = pct(newVal);
+          else item[field] = String(newVal ?? '');
+
+          td.removeChild(input);
+
+          if (field === 'cost') td.textContent = money(item[field]);
+          else if (['misc', 'herr', 'margen'].includes(field))
+            td.textContent = fmtPct(item[field]);
+          else td.textContent = String(item[field] ?? '');
+
+          const r = calcRow(item);
+          tr.querySelector('[data-role="row-costo"]').textContent = money(
+            r.totalCosto,
+          );
+          tr.querySelector('[data-role="row-venta"]').textContent = money(
+            r.totalVenta,
+          );
+          tr.querySelector('[data-role="row-total"]').textContent = money(
+            r.total,
+          );
+
+          updateGrandFooter();
+          renderGroupHeader(groupName);
+        };
+
+        const cancel = () => {
+          td.removeChild(input);
+          td.textContent = prev;
+        };
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') cancel();
+        });
+        input.addEventListener('blur', commit);
+      }
+
+      function renderGroupHeader(groupName) {
+        render();
+      }
+
+      function updateGrandFooter() {}
+
+      tableBody.addEventListener('click', (e) => {
+        const td = e.target.closest('td[data-editable="true"]');
+        if (td) {
+          e.stopPropagation();
+          startEdit(td);
+          return;
+        }
+
+        const btn = e.target.closest('[data-action]');
+        if (btn) {
+          e.stopPropagation();
+          if (btn.dataset.action === 'delete-item')
+            deleteItem(btn.closest('tr'));
+          return;
+        }
+
+        const header = e.target.closest('.group-header');
+        if (header) toggleGroup(header);
+      });
+
+      document
+        .getElementById('btnCollapseAll')
+        .addEventListener('click', collapseAll);
+      document
+        .getElementById('btnExpandAll')
+        .addEventListener('click', expandAll);
+
+      btnAddMaterial.addEventListener('click', openModal);
+      document
+        .getElementById('btnCloseModal')
+        .addEventListener('click', closeModal);
+      document
+        .getElementById('btnCancel')
+        .addEventListener('click', closeModal);
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && backdrop.classList.contains('open'))
+          closeModal();
+      });
+
+      [fAmount, fCost, fMisc, fHerr, fMargen].forEach((el) =>
+        el.addEventListener('input', updatePreview),
+      );
+      document
+        .getElementById('btnSaveMaterial')
+        .addEventListener('click', saveMaterial);
+
+      const searchInput = document.getElementById('searchInput');
+      const clearSearch = document.getElementById('clearSearch');
+
+      searchInput.addEventListener('input', (e) => {
+        searchTerm = e.target.value || '';
+
+        // show/hide X button
+        clearSearch.style.display = searchTerm ? 'block' : 'none';
+
+        // auto expand when searching
+        if (searchTerm.trim()) collapsed.clear();
+
+        render();
+      });
+
+      clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        searchTerm = '';
+        clearSearch.style.display = 'none';
+        render();
+      });
+
+      const bulkMargen = document.getElementById('bulkMargen');
+      const btnApplyMargen = document.getElementById('btnApplyMargen');
+
+      function applyMargenToData(newMargenPct, onlyVisible) {
+        const m = pct(newMargenPct); // your pct() already sanitizes
+
+        GROUPS.filter((g) => data[g] && data[g].length).forEach((groupName) => {
+          data[groupName].forEach((item) => {
+            // If onlyVisible, respect current search filter
+            if (
+              onlyVisible &&
+              searchTerm.trim() &&
+              !matchesSearch(groupName, item)
+            )
+              return;
+            item.margen = m;
+          });
+        });
+      }
+
+      btnApplyMargen.addEventListener('click', () => {
+        const m = pct(bulkMargen.value);
+
+        if (!Number.isFinite(m)) return;
+
+        // Apply to ALL materials in ALL groups
+        GROUPS.forEach((groupName) => {
+          if (!data[groupName]) return;
+
+          data[groupName].forEach((item) => {
+            item.margen = m;
+          });
+        });
+
+        render();
+      });
+
+      // Press Enter to apply
+      bulkMargen.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btnApplyMargen.click();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
