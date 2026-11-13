@@ -257,7 +257,24 @@
 
     <script>
       const OPEN_ACTION = 'open-request';
-      const FM_REQUESTS_DATA = `2026-02-15|REQ-123|Pending 2026-02-20|REQ-456|Approved`;
+      // Demo data: one request per line as "YYYY-MM-DD|ID|Status",
+      // generated for the current month so the calendar never looks empty.
+      const REQUESTS_DATA = (() => {
+        const d = new Date();
+        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return [
+          [3, 'REQ-101', 'Approved'],
+          [6, 'REQ-102', 'Completed'],
+          [10, 'REQ-103', 'In progress'],
+          [14, 'REQ-104', 'Pending'],
+          [17, 'REQ-105', 'Scheduled'],
+          [21, 'REQ-106', 'Rejected'],
+          [24, 'REQ-107', 'Pending'],
+          [27, 'REQ-108', 'Scheduled'],
+        ]
+          .map(([day, id, status]) => `${ym}-${String(day).padStart(2, '0')}|${id}|${status}`)
+          .join('\n');
+      })();
 
       const pad2 = (n) => String(n).padStart(2, '0');
       const ymd = (d) =>
@@ -297,10 +314,10 @@
         console.log('[widget:action]', action, payload);
       }
 
-            let requestsByDate = {};
+      let requestsByDate = {};
 
       function loadRequestsFromEmbeddedData() {
-        const lines = (FM_REQUESTS_DATA || '')
+        const lines = (REQUESTS_DATA || '')
           .split(/\r?\n/)
           .map((l) => l.trim())
           .filter(Boolean);
